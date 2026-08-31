@@ -1,4 +1,4 @@
-import { compareRanks, countWordsBetween } from './compare'
+import { compareRanks, getRankDistance } from './compare'
 import { DEFAULT_MAX_ATTEMPTS } from './constants'
 import { getDictionaryEntry } from './dictionary'
 import { countLetters, normalizeInput } from './normalize'
@@ -70,7 +70,7 @@ export function submitGuess(state: GameState, rawGuess: string): SubmitGuessResu
     inputKey: entry.inputKey,
     rank: entry.sortRank,
     relation,
-    wordsBetweenAnswer: countWordsBetween(entry.sortRank, state.answer.sortRank),
+    rankDistance: getRankDistance(entry.sortRank, state.answer.sortRank),
   })
   const guesses = Object.freeze([...state.guesses, guess])
   const lowerBoundRank = relation === 'before' ? entry.sortRank : state.lowerBoundRank

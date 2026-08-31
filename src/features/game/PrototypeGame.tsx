@@ -2,16 +2,24 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 
 import { DAILY_TIME_ZONE } from '../../game/constants'
+import { getDistancePercent } from '../../game/compare'
 import { submitGuess } from '../../game/engine'
 import { PROTOTYPE_DICTIONARY, createPrototypeSession } from '../../game/prototype-data'
 import {
   getAttemptsRemaining,
   getAttemptsUsed,
   getGameResult,
-  getLastGuess,
+  getRangeProximity,
   getRemainingRange,
 } from '../../game/selectors'
-import type { Guess, GuessRejectionReason, SubmitGuessResult } from '../../game/types'
+import type {
+  GameStatus,
+  Guess,
+  GuessRejectionReason,
+  RangeProximity,
+  RemainingRange,
+  SubmitGuessResult,
+} from '../../game/types'
 
 type PrototypeGameProps = Readonly<{
   now?: Date
@@ -35,7 +43,7 @@ export default function PrototypeGame({ now = new Date() }: PrototypeGameProps) 
     'Escribe una palabra del mini diccionario para cerrar el intervalo.',
   )
   const range = getRemainingRange(game)
-  const lastGuess = getLastGuess(game)
+  const proximity = getRangeProximity(game)
   const result = getGameResult(game)
   const isPlaying = game.status === 'playing'
 
@@ -121,20 +129,23 @@ export default function PrototypeGame({ now = new Date() }: PrototypeGameProps) 
         {notice}
       </p>
 
-      <section className="border-b border-stone-300 py-6" aria-labelledby="comparison-title">
-        <h3 id="comparison-title" className="text-base font-semibold">
-          Dos lecturas provisionales de cercanía
+      <section className="border-b border-stone-300 py-6" aria-labelledby="proximity-title">
+        <h3 id="proximity-title" className="text-base font-semibold">
+          Distancia porcentual
         </h3>
         <p className="mt-1 text-sm text-stone-600">
-          Ambas funcionan; elegiremos una después de probar la mecánica.
+          Se calcula por posición alfabética sobre el diccionario completo, no por significado.
         </p>
 
         <dl className="mt-4 divide-y divide-stone-200 border-y border-stone-200">
           <Metric
-            label="A · Tamaño del intervalo"
-            value={getRemainingWordsCopy(range.candidateCount, game.status)}
+            label="Último intento"
+            value={getDistanceCopy(proximity.lastGuessDistancePercent, game.status)}
           />
-          <Metric label="B · Distancia del último intento" value={getDistanceCopy(lastGuess)} />
+          <Metric
+            label="Límite más cercano"
+            value={getCloserBoundCopy(proximity.closerBound, range, game.status)}
+          />
         </dl>
       </section>
 
@@ -147,7 +158,9 @@ export default function PrototypeGame({ now = new Date() }: PrototypeGameProps) 
             {game.guesses.map((guess) => (
               <li key={guess.inputKey} className="flex justify-between gap-4 py-3 text-sm">
                 <span className="font-medium">{guess.display}</span>
-                <span className="text-right text-stone-600">{getRelationCopy(guess)}</span>
+                <span className="text-right text-stone-600">
+                  {getGuessFeedbackCopy(guess, game.dictionary.entries.length)}
+                </span>
               </li>
             ))}
           </ol>
@@ -209,33 +222,54 @@ function getAcceptedMessage(submission: Extract<SubmitGuessResult, { accepted: t
   return `La respuesta está ${submission.guess.relation === 'before' ? 'después' : 'antes'} de ${submission.guess.display}.`
 }
 
-function getRemainingWordsCopy(candidateCount: number, status: GameStateStatus): string {
+function getDistanceCopy(distancePercent: number | null, status: GameStatus): string {
+  if (distancePercent === null) {
+    return 'Aparece después del primer intento válido.'
+  }
+
+  if (status === 'won') {
+    return 'Distancia cero: respuesta encontrada.'
+  }
+
+  return `La distancia equivale a ${formatDistancePercent(distancePercent)} del diccionario completo.`
+}
+
+function getCloserBoundCopy(
+  closerBound: RangeProximity['closerBound'],
+  range: RemainingRange,
+  status: GameStatus,
+): string {
   if (status === 'won') {
     return 'Respuesta encontrada.'
   }
 
-  return `Quedan ${candidateCount} ${candidateCount === 1 ? 'palabra posible' : 'palabras posibles'}.`
-}
-
-type GameStateStatus = ReturnType<typeof getGameResult>['status']
-
-function getDistanceCopy(lastGuess: Guess | null): string {
-  if (!lastGuess) {
+  if (closerBound === null) {
     return 'Aparece después del primer intento válido.'
   }
 
-  if (lastGuess.relation === 'equal') {
-    return 'Distancia cero: respuesta encontrada.'
+  if (closerBound === 'tie') {
+    return 'La respuesta está a igual distancia de ambos límites.'
   }
 
-  const count = lastGuess.wordsBetweenAnswer
-  return `Hay ${count} ${count === 1 ? 'palabra' : 'palabras'} entre ${lastGuess.display} y la respuesta.`
+  const bound = closerBound === 'lower' ? range.lower : range.upper
+  const label = closerBound === 'lower' ? 'inferior' : 'superior'
+  return `La respuesta está más cerca de ${bound.display}, el límite ${label}.`
 }
 
-function getRelationCopy(guess: Guess): string {
+function getGuessFeedbackCopy(guess: Guess, dictionarySize: number): string {
   if (guess.relation === 'equal') {
     return 'respuesta correcta'
   }
 
-  return guess.relation === 'before' ? 'la respuesta va después' : 'la respuesta va antes'
+  const relation = guess.relation === 'before' ? 'va después' : 'va antes'
+  const distance = formatDistancePercent(getDistancePercent(guess.rankDistance, dictionarySize))
+  return `${relation} · distancia ${distance}`
+}
+
+function formatDistancePercent(value: number): string {
+  if (value > 0 && value < 1) {
+    return '<1%'
+  }
+
+  return `${Math.round(value)}%`
 }

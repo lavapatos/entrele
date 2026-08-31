@@ -19,7 +19,7 @@ export type Guess = Readonly<{
   inputKey: string
   rank: number
   relation: GuessRelation
-  wordsBetweenAnswer: number
+  rankDistance: number
 }>
 
 export type GameState = Readonly<{
@@ -69,6 +69,11 @@ export type RemainingRange = Readonly<{
   lower: RangeBound
   upper: RangeBound
   candidateCount: number
+}>
+
+export type RangeProximity = Readonly<{
+  lastGuessDistancePercent: number | null
+  closerBound: 'lower' | 'upper' | 'tie' | null
 }>
 
 export type GameResult = Readonly<{

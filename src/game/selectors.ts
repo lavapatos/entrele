@@ -1,4 +1,12 @@
-import type { GameResult, GameState, Guess, RangeBound, RemainingRange } from './types'
+import { getDistancePercent } from './compare'
+import type {
+  GameResult,
+  GameState,
+  Guess,
+  RangeBound,
+  RangeProximity,
+  RemainingRange,
+} from './types'
 
 export function getRemainingRange(state: GameState): RemainingRange {
   return {
@@ -19,6 +27,30 @@ export function getAttemptsRemaining(state: GameState): number {
 
 export function getLastGuess(state: GameState): Guess | null {
   return state.guesses.at(-1) ?? null
+}
+
+export function getRangeProximity(state: GameState): RangeProximity {
+  const lastGuess = getLastGuess(state)
+
+  if (!lastGuess) {
+    return { lastGuessDistancePercent: null, closerBound: null }
+  }
+
+  const lastGuessDistancePercent = getDistancePercent(
+    lastGuess.rankDistance,
+    state.dictionary.entries.length,
+  )
+
+  if (lastGuess.relation === 'equal') {
+    return { lastGuessDistancePercent, closerBound: null }
+  }
+
+  const lowerDistance = state.answer.sortRank - state.lowerBoundRank
+  const upperDistance = state.upperBoundRank - state.answer.sortRank
+  const closerBound =
+    lowerDistance === upperDistance ? 'tie' : lowerDistance < upperDistance ? 'lower' : 'upper'
+
+  return { lastGuessDistancePercent, closerBound }
 }
 
 export function getGameResult(state: GameState): GameResult {

@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import { createGame, submitGuess } from './engine'
 import { PROTOTYPE_DICTIONARY } from './prototype-data'
-import { getAttemptsRemaining, getGameResult, getRemainingRange } from './selectors'
+import {
+  getAttemptsRemaining,
+  getGameResult,
+  getRangeProximity,
+  getRemainingRange,
+} from './selectors'
 import type { GameState, GuessRejectionReason, SubmitGuessResult } from './types'
 
 function createMangoGame(maxAttempts = 10): GameState {
@@ -56,10 +61,14 @@ describe('motor de ENTRELE', () => {
     expect(after.guess).toMatchObject({
       display: 'radio',
       relation: 'after',
-      wordsBetweenAnswer: 12,
+      rankDistance: 13,
     })
     expect(getRemainingRange(after.state).upper.display).toBe('radio')
     expect(getRemainingRange(after.state).candidateCount).toBe(46)
+    expect(getRangeProximity(after.state)).toEqual({
+      lastGuessDistancePercent: 25,
+      closerBound: 'upper',
+    })
 
     const before = expectAccepted(submitGuess(after.state, 'cable'))
 
@@ -68,6 +77,10 @@ describe('motor de ENTRELE', () => {
       lower: { display: 'cable' },
       upper: { display: 'radio' },
       candidateCount: 28,
+    })
+    expect(getRangeProximity(before.state)).toEqual({
+      lastGuessDistancePercent: (16 / 52) * 100,
+      closerBound: 'upper',
     })
     expect(initial.guesses).toHaveLength(0)
   })
@@ -78,6 +91,10 @@ describe('motor de ENTRELE', () => {
     expect(win.guess).toMatchObject({ display: 'mango', relation: 'equal' })
     expect(win.state.status).toBe('won')
     expect(getRemainingRange(win.state).candidateCount).toBe(0)
+    expect(getRangeProximity(win.state)).toEqual({
+      lastGuessDistancePercent: 0,
+      closerBound: null,
+    })
     expect(getGameResult(win.state)).toEqual({
       status: 'won',
       attemptsUsed: 1,

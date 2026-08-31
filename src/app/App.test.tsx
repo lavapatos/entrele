@@ -23,7 +23,7 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: 'ENTRELE' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Partida técnica' })).toBeInTheDocument()
     expect(screen.getByText('Intentos: 0 de 10')).toBeInTheDocument()
-    expect(screen.getByText('Quedan 53 palabras posibles.')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Distancia porcentual' })).toBeInTheDocument()
   })
 
   it('actualiza el intervalo y permite ganar', () => {
@@ -33,7 +33,12 @@ describe('App', () => {
 
     expect(screen.getByRole('status')).toHaveTextContent('La respuesta está antes de radio.')
     expect(screen.getByText('Intentos: 1 de 10')).toBeInTheDocument()
-    expect(screen.getByText('Hay 12 palabras entre radio y la respuesta.')).toBeInTheDocument()
+    expect(
+      screen.getByText('La distancia equivale a 25% del diccionario completo.'),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText('La respuesta está más cerca de radio, el límite superior.'),
+    ).toBeInTheDocument()
 
     submit('mango')
 

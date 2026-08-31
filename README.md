@@ -7,6 +7,7 @@ hasta encontrar la respuesta de cinco letras.
 
 - La partida ofrece diez intentos válidos.
 - Los intentos inválidos, repetidos o fuera del intervalo no consumen oportunidades.
+- Cada intento válido indica su cercanía porcentual a la respuesta.
 - La palabra diaria se calcula usando el día civil de `America/Santiago`.
 - Actualmente la aplicación utiliza un diccionario reducido de prueba.
 

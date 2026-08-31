@@ -1,6 +1,14 @@
 # ENTRELE
 
-Aplicación web para un juego diario de palabras en español.
+Juego diario de palabras en español: cada intento reduce un intervalo alfabético
+hasta encontrar la respuesta de cinco letras.
+
+## Funcionamiento
+
+- La partida ofrece diez intentos válidos.
+- Los intentos inválidos, repetidos o fuera del intervalo no consumen oportunidades.
+- La palabra diaria se calcula usando el día civil de `America/Santiago`.
+- Actualmente la aplicación utiliza un diccionario reducido de prueba.
 
 ## Desarrollo
 

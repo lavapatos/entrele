@@ -1,0 +1,16 @@
+RLA-ES — diccionario ortográfico español (Chile)
+
+Los datos lingüísticos generados por esta aplicación derivan del diccionario
+es_CL de Recursos Lingüísticos Abiertos del Español (RLA-ES), distribuido en
+el paquete dictionary-es-cl 2.0.0. La fuente declara la versión 2.8 del
+diccionario.
+
+Se utiliza la opción Mozilla Public License 1.1 o posterior ofrecida por el
+esquema de licencia disyuntiva de RLA-ES. Autores, colaboradores y términos:
+https://github.com/sbosio/rla-es/blob/master/LICENSE.md
+
+Proyecto original:
+https://github.com/sbosio/rla-es
+
+Empaquetado npm:
+https://github.com/wooorm/dictionaries/tree/main/dictionaries/es-CL

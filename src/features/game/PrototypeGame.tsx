@@ -4,7 +4,7 @@ import type { FormEvent } from 'react'
 import { DAILY_TIME_ZONE } from '../../game/constants'
 import { getDistancePercent } from '../../game/compare'
 import { submitGuess } from '../../game/engine'
-import { PROTOTYPE_DICTIONARY, createPrototypeSession } from '../../game/prototype-data'
+import { DICTIONARY_VERSION, GAME_DICTIONARY, createGameSession } from '../../game/game-data'
 import {
   getAttemptsRemaining,
   getAttemptsUsed,
@@ -29,19 +29,17 @@ const REJECTION_MESSAGES: Record<GuessRejectionReason, string> = {
   empty: 'Escribe una palabra.',
   'invalid-characters': 'Usa solo letras, sin espacios interiores ni símbolos.',
   'wrong-length': 'La palabra debe tener cinco letras.',
-  'unknown-word': 'Esa palabra no está en el mini diccionario de prueba.',
+  'unknown-word': 'Esa palabra no está en el diccionario.',
   duplicate: 'Esa palabra ya fue usada. No perdiste un intento.',
   'outside-range': 'Esa palabra ya quedó fuera del intervalo. No perdiste un intento.',
   'game-over': 'La partida ya terminó.',
 }
 
 export default function PrototypeGame({ now = new Date() }: PrototypeGameProps) {
-  const [session] = useState(() => createPrototypeSession(now))
+  const [session] = useState(() => createGameSession(now))
   const [game, setGame] = useState(session.game)
   const [input, setInput] = useState('')
-  const [notice, setNotice] = useState(
-    'Escribe una palabra del mini diccionario para cerrar el intervalo.',
-  )
+  const [notice, setNotice] = useState('Escribe una palabra para cerrar el intervalo.')
   const range = getRemainingRange(game)
   const proximity = getRangeProximity(game)
   const result = getGameResult(game)
@@ -175,15 +173,10 @@ export default function PrototypeGame({ now = new Date() }: PrototypeGameProps) 
         </p>
       ) : null}
 
-      <details className="py-6 text-sm">
-        <summary className="cursor-pointer font-medium">Ver mini diccionario técnico</summary>
-        <p className="mt-3 leading-7 text-stone-600">
-          {PROTOTYPE_DICTIONARY.entries.map((entry) => entry.display).join(', ')}.
-        </p>
-        <p className="mt-2 text-stone-500">
-          Este listado solo permite probar el motor; no es el diccionario de ENTRELE.
-        </p>
-      </details>
+      <p className="py-6 text-sm text-stone-500">
+        Diccionario {DICTIONARY_VERSION} · {GAME_DICTIONARY.entries.length.toLocaleString('es-CL')}{' '}
+        palabras aceptadas.
+      </p>
     </section>
   )
 }

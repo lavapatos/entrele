@@ -1,6 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
+import { getDistancePercent } from '../game/compare'
+import { GAME_DICTIONARY } from '../game/game-data'
 import App from './App'
 
 describe('App', () => {
@@ -33,8 +35,19 @@ describe('App', () => {
 
     expect(screen.getByRole('status')).toHaveTextContent('La respuesta está antes de radio.')
     expect(screen.getByText('Intentos: 1 de 10')).toBeInTheDocument()
+    const mango = GAME_DICTIONARY.entriesByInputKey.mango
+    const radio = GAME_DICTIONARY.entriesByInputKey.radio
+
+    if (!mango || !radio) throw new Error('Faltan palabras necesarias para la prueba.')
+
+    const distance = getDistancePercent(
+      Math.abs(mango.sortRank - radio.sortRank),
+      GAME_DICTIONARY.entries.length,
+    )
     expect(
-      screen.getByText('La distancia equivale a 25% del diccionario completo.'),
+      screen.getByText(
+        `La distancia equivale a ${Math.round(distance)}% del diccionario completo.`,
+      ),
     ).toBeInTheDocument()
     expect(
       screen.getByText('La respuesta está más cerca de radio, el límite superior.'),

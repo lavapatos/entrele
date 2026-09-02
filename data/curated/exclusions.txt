@@ -1,0 +1,1 @@
+# Las exclusiones se expresan como claves completas de cinco letras.

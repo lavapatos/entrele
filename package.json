@@ -5,10 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run typecheck && vite build",
+    "build": "npm run dictionary:build && npm run dictionary:validate && npm run typecheck && vite build",
+    "dictionary:build": "node scripts/dictionary/build-dictionary.ts",
+    "dictionary:validate": "node scripts/dictionary/validate-dictionary.ts",
+    "dictionary:report": "node scripts/dictionary/inspect-dictionary.ts",
     "lint": "eslint .",
-    "format": "prettier --write package.json index.html vite.config.ts tsconfig.json tsconfig.app.json tsconfig.node.json eslint.config.js README.md \"src/**/*.{ts,tsx,css}\"",
-    "format:check": "prettier --check package.json index.html vite.config.ts tsconfig.json tsconfig.app.json tsconfig.node.json eslint.config.js README.md \"src/**/*.{ts,tsx,css}\"",
+    "format": "prettier --write package.json index.html vite.config.ts tsconfig.json tsconfig.app.json tsconfig.node.json eslint.config.js README.md \"src/**/*.{ts,tsx,css}\" \"scripts/**/*.ts\" \"data/curated/**/*.json\"",
+    "format:check": "prettier --check package.json index.html vite.config.ts tsconfig.json tsconfig.app.json tsconfig.node.json eslint.config.js README.md \"src/**/*.{ts,tsx,css}\" \"scripts/**/*.ts\" \"data/curated/**/*.json\"",
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest"

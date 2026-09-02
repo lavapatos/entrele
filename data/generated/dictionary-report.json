@@ -1,0 +1,248 @@
+{
+  "version": "rla-es-cl-2.8.1+eb055eef4c24",
+  "source": {
+    "package": "dictionary-es-cl",
+    "packageVersion": "2.0.0",
+    "dictionaryVersion": "2.8",
+    "selectedLicense": "MPL-1.1-or-later"
+  },
+  "totals": {
+    "sourceForms": 570528,
+    "rejectedCharactersOrCase": 769,
+    "rejectedLength": 558884,
+    "rejectedByHunspell": 0,
+    "curatedAdditions": 48,
+    "curatedExclusions": 0,
+    "acceptedInputKeys": 8198,
+    "collapsedVariants": 2693,
+    "entriesWithAccents": 1042,
+    "entriesWithEnye": 244,
+    "generalAnswers": 279,
+    "sensitiveAnswers": 20,
+    "rareSensitiveAnswers": 4
+  },
+  "schedule": {
+    "sensitiveDaysPercent": "1.5625",
+    "rareSensitiveDaysPercent": "0.3906"
+  },
+  "samples": {
+    "common": [
+      "abajo",
+      "abeja",
+      "abrir",
+      "acero",
+      "actor",
+      "ahora",
+      "amigo",
+      "andar",
+      "antes",
+      "árbol",
+      "arena",
+      "arroz",
+      "avión",
+      "ayuda",
+      "banco",
+      "barco",
+      "beber",
+      "bueno",
+      "calor",
+      "calle",
+      "campo",
+      "carne",
+      "carta",
+      "cielo",
+      "claro",
+      "color",
+      "comer",
+      "dulce",
+      "fuego",
+      "gente"
+    ],
+    "rare": [
+      "ababa",
+      "acune",
+      "aloma",
+      "arcar",
+      "avaha",
+      "birlo",
+      "brees",
+      "cusan",
+      "erina",
+      "fatua",
+      "fuñen",
+      "glosa",
+      "gueto",
+      "heñís",
+      "hucha",
+      "jopar",
+      "laque",
+      "malar",
+      "mores",
+      "nabla",
+      "nonio",
+      "okupa",
+      "osudo",
+      "parco",
+      "pirro",
+      "puñar",
+      "rasar",
+      "resal",
+      "sarzo",
+      "trovo"
+    ],
+    "chilean": [
+      "bacán",
+      "boldo",
+      "cabro",
+      "chala",
+      "choro",
+      "coipo",
+      "cuico",
+      "guata",
+      "huasa",
+      "huaso",
+      "hueón",
+      "jotes",
+      "lenga",
+      "loica",
+      "lucas",
+      "luche",
+      "manso",
+      "maqui",
+      "micro",
+      "palta",
+      "penca",
+      "peumo",
+      "piola",
+      "pisco",
+      "piure",
+      "potos",
+      "pucha",
+      "tinca",
+      "tulón",
+      "weona"
+    ],
+    "rejected": [
+      {
+        "input": "sol",
+        "reason": "longitud"
+      },
+      {
+        "input": "casa",
+        "reason": "longitud"
+      },
+      {
+        "input": "palabra",
+        "reason": "longitud"
+      },
+      {
+        "input": "perrito",
+        "reason": "longitud"
+      },
+      {
+        "input": "diccionario",
+        "reason": "longitud"
+      },
+      {
+        "input": "dos palabras",
+        "reason": "caracteres"
+      },
+      {
+        "input": "árbol!",
+        "reason": "caracteres"
+      },
+      {
+        "input": "niñ@",
+        "reason": "caracteres"
+      },
+      {
+        "input": "12345",
+        "reason": "caracteres"
+      },
+      {
+        "input": "a-b-c",
+        "reason": "caracteres"
+      },
+      {
+        "input": "café2",
+        "reason": "caracteres"
+      },
+      {
+        "input": "hola?",
+        "reason": "caracteres"
+      },
+      {
+        "input": "perro.",
+        "reason": "caracteres"
+      },
+      {
+        "input": "radio/",
+        "reason": "caracteres"
+      },
+      {
+        "input": "#cinco",
+        "reason": "caracteres"
+      },
+      {
+        "input": "uno",
+        "reason": "longitud"
+      },
+      {
+        "input": "tren",
+        "reason": "longitud"
+      },
+      {
+        "input": "nubesita",
+        "reason": "longitud"
+      },
+      {
+        "input": "computador",
+        "reason": "longitud"
+      },
+      {
+        "input": "zapatos",
+        "reason": "longitud"
+      },
+      {
+        "input": "árboles",
+        "reason": "longitud"
+      },
+      {
+        "input": "jugando",
+        "reason": "longitud"
+      },
+      {
+        "input": "mañana!",
+        "reason": "caracteres"
+      },
+      {
+        "input": "PINGÜ",
+        "reason": "mayúsculas"
+      },
+      {
+        "input": "año",
+        "reason": "longitud"
+      },
+      {
+        "input": "x y z",
+        "reason": "caracteres"
+      },
+      {
+        "input": "cielo_",
+        "reason": "caracteres"
+      },
+      {
+        "input": "dul ce",
+        "reason": "caracteres"
+      },
+      {
+        "input": "perr0",
+        "reason": "caracteres"
+      },
+      {
+        "input": "🙂🙂🙂🙂🙂",
+        "reason": "caracteres"
+      }
+    ]
+  }
+}

@@ -44,4 +44,23 @@ describe('respuesta diaria', () => {
       'La fecha civil "2026-02-30" no existe.',
     )
   })
+
+  it('reserva 1 de cada 64 días para respuestas sensibles y hace las obvias aún más raras', () => {
+    const config = {
+      answers: PROTOTYPE_ANSWERS.slice(0, 3),
+      sensitiveAnswers: PROTOTYPE_ANSWERS.slice(3, 5),
+      rareSensitiveAnswers: PROTOTYPE_ANSWERS.slice(5, 7),
+      sensitiveIntervalDays: 64,
+      sensitivePhase: 1,
+      rareSensitiveEvery: 4,
+      epochDate: '2026-01-01',
+      timeZone: DAILY_TIME_ZONE,
+    }
+
+    expect(selectDailyAnswer(config, () => new Date('2026-01-02T12:00:00Z')).pool).toBe(
+      'rare-sensitive',
+    )
+    expect(selectDailyAnswer(config, () => new Date('2026-03-07T12:00:00Z')).pool).toBe('sensitive')
+    expect(selectDailyAnswer(config, () => new Date('2026-01-03T12:00:00Z')).pool).toBe('general')
+  })
 })

@@ -1,7 +1,32 @@
 @import 'tailwindcss';
 
+@font-face {
+  font-family: 'Comfortaa Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300 700;
+  src: url('@fontsource-variable/comfortaa/files/comfortaa-latin-wght-normal.woff2')
+    format('woff2-variations');
+}
+
+@font-face {
+  font-family: 'Lato';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('@fontsource/lato/files/lato-latin-400-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Lato';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url('@fontsource/lato/files/lato-latin-700-normal.woff2') format('woff2');
+}
+
 :root {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Lato', Arial, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -144,12 +169,13 @@ summary {
 .game-title {
   grid-column: 2;
   margin: 0;
+  font-family: 'Comfortaa Variable', 'Trebuchet MS', sans-serif;
   font-size: clamp(1.65rem, 8vw, 2.25rem);
-  font-weight: 800;
-  letter-spacing: 0.18em;
+  font-weight: 700;
+  letter-spacing: 0.11em;
   line-height: 1;
   text-align: center;
-  text-indent: 0.18em;
+  text-indent: 0.11em;
 }
 
 .theme-settings {

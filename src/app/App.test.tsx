@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { formatDistancePercentage } from '../features/game/distance-display'
 import { getDistancePercent } from '../game/compare'
 import { GAME_DICTIONARY } from '../game/game-data'
 import App from './App'
@@ -51,7 +52,7 @@ describe('App', () => {
       Math.abs(mango.sortRank - radio.sortRank),
       GAME_DICTIONARY.entries.length,
     )
-    expect(screen.getByText(formatDistance(distance))).toBeInTheDocument()
+    expect(screen.getByText(formatDistancePercentage(distance))).toBeInTheDocument()
 
     submit('mango')
 
@@ -60,14 +61,34 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: 'Probar' })).toBeDisabled()
   })
 
-  it('bloquea palabras fuera del intervalo sin gastar otro intento', () => {
+  it('impide escribir palabras fuera del intervalo sin gastar otro intento', () => {
     renderPrototype()
 
     submit('radio')
-    submit('zorro')
+    const input = screen.getByLabelText('Palabra de cinco letras')
+    fireEvent.change(input, { target: { value: 'zorro' } })
 
-    expect(screen.getByRole('status')).toHaveTextContent('Quedó fuera del intervalo.')
+    expect(input).toHaveValue('')
     expect(screen.getByLabelText('1 de 10 intentos usados')).toBeInTheDocument()
+  })
+
+  it('bloquea letras que no pueden continuar dentro del intervalo', () => {
+    renderPrototype()
+    submit('radio')
+
+    expect(screen.getByRole('button', { name: 'Letra A' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Letra Z' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Letra Z' })).toHaveClass('key-range-blocked')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Letra R' }))
+
+    const input = screen.getByLabelText('Palabra de cinco letras')
+    expect(input).toHaveValue('r')
+    expect(screen.getByRole('button', { name: 'Letra A' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Letra B' })).toBeDisabled()
+
+    fireEvent.change(input, { target: { value: 'rz' } })
+    expect(input).toHaveValue('r')
   })
 
   it('permite cambiar y conservar la paleta y el modo', () => {
@@ -82,8 +103,3 @@ describe('App', () => {
     expect(window.localStorage.getItem('entrele:mode')).toBe('dark')
   })
 })
-
-function formatDistance(distance: number): string {
-  if (distance > 0 && distance < 1) return '<1%'
-  return `${Math.round(distance)}%`
-}

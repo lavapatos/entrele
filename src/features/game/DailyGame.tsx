@@ -3,8 +3,15 @@ import type { FormEvent } from 'react'
 
 import { submitGuess } from '../../game/engine'
 import { createGameSession } from '../../game/game-data'
-import { getAttemptsUsed, getRangeProximity, getRemainingRange } from '../../game/selectors'
+import { countLetters, normalizeInput } from '../../game/normalize'
+import {
+  getAllowedNextLetters,
+  getAttemptsUsed,
+  getRangeProximity,
+  getRemainingRange,
+} from '../../game/selectors'
 import type { GuessRejectionReason, RangeBound, SubmitGuessResult } from '../../game/types'
+import { formatDistancePercentage, getDistanceMarkerPosition } from './distance-display'
 
 type DailyGameProps = Readonly<{
   now?: Date
@@ -35,15 +42,20 @@ export default function DailyGame({ now = new Date() }: DailyGameProps) {
   const proximity = getRangeProximity(game)
   const attemptsUsed = getAttemptsUsed(game)
   const isPlaying = game.status === 'playing'
+  const allowedLetters = getAllowedNextLetters(game, input)
 
   function updateInput(value: string) {
-    setInput([...value].slice(0, game.dictionary.wordLength).join(''))
+    setInput(constrainInputToRange(game, value))
     setNotice('')
   }
 
   function appendLetter(letter: string) {
     if (!isPlaying || [...input].length >= game.dictionary.wordLength) return
-    updateInput(`${input}${letter.toLocaleLowerCase('es-CL')}`)
+
+    const normalizedLetter = letter.toLocaleLowerCase('es-CL')
+    if (!allowedLetters.includes(normalizedLetter)) return
+
+    updateInput(`${input}${normalizedLetter}`)
   }
 
   function deleteLetter() {
@@ -104,7 +116,12 @@ export default function DailyGame({ now = new Date() }: DailyGameProps) {
         {notice}
       </p>
 
-      <OnScreenKeyboard disabled={!isPlaying} onLetter={appendLetter} onDelete={deleteLetter} />
+      <OnScreenKeyboard
+        disabled={!isPlaying}
+        allowedLetters={allowedLetters}
+        onLetter={appendLetter}
+        onDelete={deleteLetter}
+      />
     </form>
   )
 }
@@ -197,8 +214,11 @@ function DistanceGauge({ percentage }: Readonly<{ percentage: number | null }>) 
     <aside className="distance-gauge" aria-label={getDistanceLabel(percentage)}>
       <span className="distance-track" aria-hidden="true" />
       {percentage === null ? null : (
-        <span className="distance-marker" style={{ top: `${getMarkerPosition(percentage)}%` }}>
-          {formatPercentage(percentage)}
+        <span
+          className="distance-marker"
+          style={{ top: `${getDistanceMarkerPosition(percentage)}%` }}
+        >
+          {formatDistancePercentage(percentage)}
         </span>
       )}
     </aside>
@@ -207,13 +227,17 @@ function DistanceGauge({ percentage }: Readonly<{ percentage: number | null }>) 
 
 function OnScreenKeyboard({
   disabled,
+  allowedLetters,
   onLetter,
   onDelete,
 }: Readonly<{
   disabled: boolean
+  allowedLetters: readonly string[]
   onLetter: (letter: string) => void
   onDelete: () => void
 }>) {
+  const allowedLetterSet = new Set(allowedLetters)
+
   return (
     <section className="keyboard" aria-label="Teclado">
       {KEYBOARD_ROWS.map((row, rowIndex) => (
@@ -230,18 +254,23 @@ function OnScreenKeyboard({
             </button>
           ) : null}
 
-          {row.map((letter) => (
-            <button
-              className="key"
-              type="button"
-              aria-label={`Letra ${letter}`}
-              disabled={disabled}
-              onClick={() => onLetter(letter)}
-              key={letter}
-            >
-              {letter}
-            </button>
-          ))}
+          {row.map((letter) => {
+            const isRangeBlocked =
+              !disabled && !allowedLetterSet.has(letter.toLocaleLowerCase('es-CL'))
+
+            return (
+              <button
+                className={`key ${isRangeBlocked ? 'key-range-blocked' : ''}`}
+                type="button"
+                aria-label={`Letra ${letter}`}
+                disabled={disabled || isRangeBlocked}
+                onClick={() => onLetter(letter)}
+                key={letter}
+              >
+                {letter}
+              </button>
+            )
+          })}
 
           {rowIndex === KEYBOARD_ROWS.length - 1 ? (
             <button
@@ -271,18 +300,43 @@ function getAcceptedNotice(submission: Extract<SubmitGuessResult, { accepted: tr
   return ''
 }
 
-function getMarkerPosition(percentage: number): number {
-  const boundedPercentage = Math.max(0, Math.min(100, percentage))
-  return 14 + (1 - boundedPercentage / 100) * 72
-}
-
 function getDistanceLabel(percentage: number | null): string {
   return percentage === null
     ? 'La distancia aparecerá después del primer intento válido.'
-    : `Distancia: ${formatPercentage(percentage)}`
+    : `Distancia: ${formatDistancePercentage(percentage)}`
 }
 
-function formatPercentage(percentage: number): string {
-  if (percentage > 0 && percentage < 1) return '<1%'
-  return `${Math.round(percentage)}%`
+function constrainInputToRange(
+  game: Parameters<typeof getAllowedNextLetters>[0],
+  rawValue: string,
+): string {
+  const letters = [...rawValue.normalize('NFC')].slice(0, game.dictionary.wordLength)
+  const normalizedLetters: string[] = []
+
+  for (const letter of letters) {
+    const normalized = normalizeInput(letter)
+
+    if (!normalized.ok || countLetters(normalized.inputKey) !== 1) {
+      return letters.join('')
+    }
+
+    normalizedLetters.push(normalized.inputKey)
+  }
+
+  let constrainedValue = ''
+
+  for (let index = 0; index < letters.length; index += 1) {
+    const normalizedLetter = normalizedLetters[index]
+
+    if (
+      !normalizedLetter ||
+      !getAllowedNextLetters(game, constrainedValue).includes(normalizedLetter)
+    ) {
+      break
+    }
+
+    constrainedValue += letters[index] ?? ''
+  }
+
+  return constrainedValue
 }

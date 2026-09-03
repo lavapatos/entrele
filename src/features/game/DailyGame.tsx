@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { FormEvent } from 'react'
+import type { FormEvent, ReactNode } from 'react'
 
 import { submitGuess } from '../../game/engine'
 import { createGameSession } from '../../game/game-data'
@@ -12,9 +12,11 @@ import {
 } from '../../game/selectors'
 import type { GuessRejectionReason, RangeBound, SubmitGuessResult } from '../../game/types'
 import { formatDistancePercentage, getDistanceMarkerPosition } from './distance-display'
+import GameTools from './GameTools'
 
 type DailyGameProps = Readonly<{
   now?: Date
+  themeControl: ReactNode
 }>
 
 const KEYBOARD_ROWS = [
@@ -33,7 +35,7 @@ const REJECTION_MESSAGES: Record<GuessRejectionReason, string> = {
   'game-over': 'La partida terminó.',
 }
 
-export default function DailyGame({ now = new Date() }: DailyGameProps) {
+export default function DailyGame({ now = new Date(), themeControl }: DailyGameProps) {
   const [session] = useState(() => createGameSession(now))
   const [game, setGame] = useState(session.game)
   const [input, setInput] = useState('')
@@ -104,6 +106,14 @@ export default function DailyGame({ now = new Date() }: DailyGameProps) {
             wordLength={game.dictionary.wordLength}
           />
         </div>
+
+        <GameTools
+          status={game.status}
+          attemptsUsed={attemptsUsed}
+          maxAttempts={game.maxAttempts}
+          candidateCount={range.candidateCount}
+          themeControl={themeControl}
+        />
       </section>
 
       <p

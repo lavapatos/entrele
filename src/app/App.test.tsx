@@ -105,6 +105,7 @@ describe('App', () => {
   it('permite cambiar y conservar la paleta y el modo', () => {
     renderPrototype()
 
+    fireEvent.click(screen.getByLabelText('Cambiar tema'))
     fireEvent.click(screen.getByRole('button', { name: 'Paleta B' }))
     fireEvent.click(screen.getByRole('button', { name: 'Modo oscuro' }))
 
@@ -112,5 +113,21 @@ describe('App', () => {
     expect(document.documentElement.dataset.mode).toBe('dark')
     expect(window.localStorage.getItem('entrele:palette')).toBe('b')
     expect(window.localStorage.getItem('entrele:mode')).toBe('dark')
+  })
+
+  it('abre la ayuda y muestra estadísticas reales de la partida actual', () => {
+    renderPrototype()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cómo jugar' }))
+    expect(screen.getByRole('dialog', { name: 'Cómo jugar' })).toBeInTheDocument()
+    expect(screen.getByText('Escribe una palabra de cinco letras.')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
+
+    submit('radio')
+    fireEvent.click(screen.getByRole('button', { name: 'Estadísticas de hoy' }))
+
+    expect(screen.getByRole('dialog', { name: 'Hoy' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Intentos usados: 1')).toBeInTheDocument()
+    expect(screen.getByLabelText('Intentos disponibles: 9')).toBeInTheDocument()
   })
 })

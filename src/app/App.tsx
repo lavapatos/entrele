@@ -13,17 +13,20 @@ export default function App({ now }: AppProps) {
     <main className="game-page">
       <div className="game-shell">
         <header className="game-header">
-          <span aria-hidden="true" />
           <h1 className="game-title">ENTRELE</h1>
-          <ThemeSettings
-            palette={palette}
-            onPaletteChange={setPalette}
-            mode={modePreference}
-            onModeChange={setModePreference}
-          />
         </header>
 
-        <DailyGame now={now} />
+        <DailyGame
+          now={now}
+          themeControl={
+            <ThemeSettings
+              palette={palette}
+              onPaletteChange={setPalette}
+              mode={modePreference}
+              onModeChange={setModePreference}
+            />
+          }
+        />
       </div>
     </main>
   )

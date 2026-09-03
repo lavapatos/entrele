@@ -1,3 +1,5 @@
+import { MagicWand } from '@phosphor-icons/react'
+
 import type { ThemeModePreference, ThemePalette } from '../../theme/useTheme'
 
 type ThemeSettingsProps = Readonly<{
@@ -15,7 +17,9 @@ export default function ThemeSettings({
 }: ThemeSettingsProps) {
   return (
     <details className="theme-settings">
-      <summary className="theme-trigger">Tema</summary>
+      <summary className="tool-button theme-trigger" aria-label="Cambiar tema">
+        <MagicWand size={22} weight="regular" aria-hidden="true" />
+      </summary>
       <div className="theme-menu">
         <fieldset className="theme-fieldset">
           <legend>Paleta</legend>

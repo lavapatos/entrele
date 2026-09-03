@@ -165,14 +165,11 @@ summary {
 }
 
 .game-header {
-  position: relative;
-  display: grid;
-  grid-template-columns: 3.5rem minmax(0, 1fr) 3.5rem;
-  align-items: center;
+  display: flex;
+  justify-content: center;
 }
 
 .game-title {
-  grid-column: 2;
   margin: 0;
   font-family: 'Comfortaa Variable', 'Trebuchet MS', sans-serif;
   font-size: clamp(1.65rem, 8vw, 2.25rem);
@@ -185,21 +182,9 @@ summary {
 
 .theme-settings {
   position: relative;
-  grid-column: 3;
-  justify-self: end;
 }
 
 .theme-trigger {
-  display: grid;
-  min-width: 3.25rem;
-  min-height: 2.75rem;
-  place-items: center;
-  border: 1px solid transparent;
-  border-radius: 2px;
-  color: var(--color-ink);
-  cursor: pointer;
-  font-size: 0.72rem;
-  font-weight: 700;
   list-style: none;
 }
 
@@ -207,14 +192,10 @@ summary {
   display: none;
 }
 
-.theme-trigger:hover,
-.theme-settings[open] .theme-trigger {
-  border-color: var(--color-key-border);
-  background: var(--color-key);
-}
-
 .theme-trigger:focus-visible,
 .theme-option:focus-visible,
+.tool-button:focus-visible,
+.dialog-close:focus-visible,
 .key:focus-visible,
 .native-guess-input:focus-visible + .guess-row {
   outline: 2px solid var(--color-accent);
@@ -223,9 +204,9 @@ summary {
 
 .theme-menu {
   position: absolute;
-  z-index: 2;
-  top: calc(100% + 0.5rem);
+  z-index: 3;
   right: 0;
+  bottom: calc(100% + 0.5rem);
   width: min(17.5rem, calc(100vw - 1.5rem));
   padding: 1rem;
   border: 1px solid var(--color-tile-border);
@@ -325,6 +306,151 @@ summary {
   grid-column: 2;
   grid-template-rows: repeat(3, auto);
   gap: clamp(1.2rem, 5vw, 1.75rem);
+}
+
+.game-tools {
+  display: grid;
+  grid-column: 3;
+  grid-row: 1;
+  align-self: center;
+  justify-self: center;
+  gap: 0.85rem;
+  transform: translateX(0.55rem);
+}
+
+.tool-button,
+.dialog-close {
+  display: grid;
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.tool-button:hover,
+.theme-settings[open] .theme-trigger,
+.dialog-close:hover {
+  border-color: var(--color-key-border);
+  background: var(--color-key);
+}
+
+.tool-button:active,
+.dialog-close:active {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+.game-dialog {
+  width: min(21rem, calc(100vw - 2rem));
+  padding: 1.3rem;
+  border: 1px solid var(--color-tile-border);
+  border-radius: 2px;
+  background: var(--color-input);
+  color: var(--color-ink);
+}
+
+.game-dialog::backdrop {
+  background: rgb(16 21 24 / 58%);
+}
+
+.dialog-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--color-key-border);
+}
+
+.dialog-heading h2 {
+  margin: 0;
+  font-family: 'Comfortaa Variable', 'Trebuchet MS', sans-serif;
+  font-size: 1.05rem;
+  letter-spacing: 0.03em;
+}
+
+.dialog-close {
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 auto;
+}
+
+.help-steps {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  counter-reset: help-step;
+}
+
+.help-steps li {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: baseline;
+  padding: 0.9rem 0;
+  counter-increment: help-step;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.help-steps li + li {
+  border-top: 1px solid var(--color-key-border);
+}
+
+.help-steps li::before {
+  color: var(--color-status);
+  content: counter(help-step);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.session-status {
+  margin: 1rem 0;
+  color: var(--color-status);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.session-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+}
+
+.session-stats > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column-reverse;
+  gap: 0.3rem;
+  padding: 0.25rem 0.45rem;
+  text-align: center;
+}
+
+.session-stats > div + div {
+  border-left: 1px solid var(--color-key-border);
+}
+
+.session-stats dt {
+  color: var(--color-quiet);
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.session-stats dd {
+  overflow: hidden;
+  margin: 0;
+  font-size: 1.45rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
 }
 
 .letter-row {
@@ -525,6 +651,10 @@ summary {
 @media (max-width: 360px) {
   .distance-gauge {
     transform: translateX(-0.25rem);
+  }
+
+  .game-tools {
+    transform: translateX(0.25rem);
   }
 
   .theme-options-wide {

@@ -40,22 +40,16 @@ export function getAllowedNextLetters(state: GameState, rawPrefix: string): read
 
   if (prefixLength >= state.dictionary.wordLength) return []
 
-  const lowerBound = state.dictionary.entries[state.lowerBoundRank]?.inputKey ?? null
-  const upperBound = state.dictionary.entries[state.upperBoundRank]?.inputKey ?? null
-  const suffixLength = state.dictionary.wordLength - prefixLength - 1
-  const firstSuffix = 'a'.repeat(suffixLength)
-  const lastSuffix = 'z'.repeat(suffixLength)
+  return SPANISH_ALPHABET.filter((letter) =>
+    isNormalizedPrefixWithinRange(state, `${prefix}${letter}`),
+  )
+}
 
-  return SPANISH_ALPHABET.filter((letter) => {
-    const firstPossibleWord = `${prefix}${letter}${firstSuffix}`
-    const lastPossibleWord = `${prefix}${letter}${lastSuffix}`
-    const fallsAfterLowerBound =
-      lowerBound === null || compareInputKeys(lastPossibleWord, lowerBound) > 0
-    const fallsBeforeUpperBound =
-      upperBound === null || compareInputKeys(firstPossibleWord, upperBound) < 0
+export function isInputPrefixWithinRange(state: GameState, rawPrefix: string): boolean {
+  if (state.status !== 'playing' || rawPrefix.length === 0) return true
 
-    return fallsAfterLowerBound && fallsBeforeUpperBound
-  })
+  const prefix = normalizePrefix(rawPrefix)
+  return prefix === null || isNormalizedPrefixWithinRange(state, prefix)
 }
 
 export function getLastGuess(state: GameState): Guess | null {
@@ -114,6 +108,24 @@ function normalizePrefix(rawPrefix: string): string | null {
 
   const normalized = normalizeInput(rawPrefix)
   return normalized.ok ? normalized.inputKey : null
+}
+
+function isNormalizedPrefixWithinRange(state: GameState, prefix: string): boolean {
+  const prefixLength = countLetters(prefix)
+
+  if (prefixLength > state.dictionary.wordLength) return false
+
+  const lowerBound = state.dictionary.entries[state.lowerBoundRank]?.inputKey ?? null
+  const upperBound = state.dictionary.entries[state.upperBoundRank]?.inputKey ?? null
+  const suffixLength = state.dictionary.wordLength - prefixLength
+  const firstPossibleWord = `${prefix}${'a'.repeat(suffixLength)}`
+  const lastPossibleWord = `${prefix}${'z'.repeat(suffixLength)}`
+  const fallsAfterLowerBound =
+    lowerBound === null || compareInputKeys(lastPossibleWord, lowerBound) > 0
+  const fallsBeforeUpperBound =
+    upperBound === null || compareInputKeys(firstPossibleWord, upperBound) < 0
+
+  return fallsAfterLowerBound && fallsBeforeUpperBound
 }
 
 function compareInputKeys(left: string, right: string): number {

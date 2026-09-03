@@ -42,6 +42,7 @@
   --color-key: #edf1f0;
   --color-key-border: #9aadb3;
   --color-status: #7a4050;
+  --color-alert: #8c493f;
 }
 
 html[data-palette='a'][data-mode='light'] {
@@ -56,6 +57,7 @@ html[data-palette='a'][data-mode='light'] {
   --color-key: #edf1f0;
   --color-key-border: #9aadb3;
   --color-status: #7a4050;
+  --color-alert: #8c493f;
 }
 
 html[data-palette='b'][data-mode='light'] {
@@ -70,6 +72,7 @@ html[data-palette='b'][data-mode='light'] {
   --color-key: #f7e9ec;
   --color-key-border: #c9a9b3;
   --color-status: #496b7a;
+  --color-alert: #8a433d;
 }
 
 html[data-palette='a'][data-mode='dark'] {
@@ -84,6 +87,7 @@ html[data-palette='a'][data-mode='dark'] {
   --color-key: #20272a;
   --color-key-border: #3f4b50;
   --color-status: #e2b1bc;
+  --color-alert: #e2a197;
 }
 
 html[data-palette='b'][data-mode='dark'] {
@@ -98,6 +102,7 @@ html[data-palette='b'][data-mode='dark'] {
   --color-key: #2b2526;
   --color-key-border: #4e4244;
   --color-status: #a9c4ce;
+  --color-alert: #e0a099;
 }
 
 * {
@@ -371,6 +376,15 @@ summary {
   background: var(--color-input);
 }
 
+.guess-row .letter-tile-alert {
+  border-color: var(--color-alert);
+  color: var(--color-alert);
+}
+
+.guess-row-alert .guess-caret::after {
+  background: var(--color-alert);
+}
+
 .guess-caret::after {
   width: 1px;
   height: 1.35rem;
@@ -422,8 +436,8 @@ summary {
   z-index: 1;
   left: 50%;
   display: grid;
-  width: 2.8rem;
-  height: 2.8rem;
+  width: 2.5rem;
+  height: 2.5rem;
   place-items: center;
   transform: translate(-50%, -50%);
   border: 0;
@@ -448,6 +462,10 @@ summary {
 
 .game-notice[data-visible='false'] {
   visibility: hidden;
+}
+
+.game-notice[data-tone='alert'] {
+  color: var(--color-alert);
 }
 
 .keyboard {
@@ -493,11 +511,15 @@ summary {
   opacity: 0.45;
 }
 
-.key-range-blocked:disabled {
+.key-range-blocked {
   border-color: var(--color-quiet);
   background: var(--color-page);
   color: var(--color-quiet);
   opacity: 0.42;
+}
+
+.key-range-blocked:hover:not(:disabled) {
+  border-color: var(--color-quiet);
 }
 
 @media (max-width: 360px) {

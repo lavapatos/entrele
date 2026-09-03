@@ -61,34 +61,45 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: 'Probar' })).toBeDisabled()
   })
 
-  it('impide escribir palabras fuera del intervalo sin gastar otro intento', () => {
+  it('advierte una palabra fuera del intervalo y no gasta otro intento', () => {
     renderPrototype()
 
     submit('radio')
     const input = screen.getByLabelText('Palabra de cinco letras')
     fireEvent.change(input, { target: { value: 'zorro' } })
 
-    expect(input).toHaveValue('')
+    expect(input).toHaveValue('zorro')
+    expect(input).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByRole('status')).toHaveTextContent('Palabra fuera de rango')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Probar' }))
+
+    expect(input).toHaveValue('zorro')
+    expect(screen.getByRole('status')).toHaveTextContent('Palabra fuera de rango')
     expect(screen.getByLabelText('1 de 10 intentos usados')).toBeInTheDocument()
   })
 
-  it('bloquea letras que no pueden continuar dentro del intervalo', () => {
+  it('marca las letras que salen del intervalo, pero permite usarlas', () => {
     renderPrototype()
     submit('radio')
 
     expect(screen.getByRole('button', { name: 'Letra A' })).toBeEnabled()
-    expect(screen.getByRole('button', { name: 'Letra Z' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Letra Z' })).toHaveClass('key-range-blocked')
+    const zKey = screen.getByRole('button', { name: 'Letra Z, fuera del rango actual' })
+    expect(zKey).toBeEnabled()
+    expect(zKey).toHaveClass('key-range-blocked')
 
     fireEvent.click(screen.getByRole('button', { name: 'Letra R' }))
 
     const input = screen.getByLabelText('Palabra de cinco letras')
     expect(input).toHaveValue('r')
     expect(screen.getByRole('button', { name: 'Letra A' })).toBeEnabled()
-    expect(screen.getByRole('button', { name: 'Letra B' })).toBeDisabled()
+    const bKey = screen.getByRole('button', { name: 'Letra B, fuera del rango actual' })
+    expect(bKey).toBeEnabled()
 
-    fireEvent.change(input, { target: { value: 'rz' } })
-    expect(input).toHaveValue('r')
+    fireEvent.click(bKey)
+    expect(input).toHaveValue('rb')
+    expect(input).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByRole('status')).toHaveTextContent('Palabra fuera de rango')
   })
 
   it('permite cambiar y conservar la paleta y el modo', () => {

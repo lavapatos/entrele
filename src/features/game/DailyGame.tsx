@@ -3,12 +3,12 @@ import type { FormEvent } from 'react'
 
 import { submitGuess } from '../../game/engine'
 import { createGameSession } from '../../game/game-data'
-import { countLetters, normalizeInput } from '../../game/normalize'
 import {
   getAllowedNextLetters,
   getAttemptsUsed,
   getRangeProximity,
   getRemainingRange,
+  isInputPrefixWithinRange,
 } from '../../game/selectors'
 import type { GuessRejectionReason, RangeBound, SubmitGuessResult } from '../../game/types'
 import { formatDistancePercentage, getDistanceMarkerPosition } from './distance-display'
@@ -29,7 +29,7 @@ const REJECTION_MESSAGES: Record<GuessRejectionReason, string> = {
   'wrong-length': 'Deben ser cinco letras.',
   'unknown-word': 'No está en el diccionario.',
   duplicate: 'Ya la probaste.',
-  'outside-range': 'Quedó fuera del intervalo.',
+  'outside-range': 'Palabra fuera de rango',
   'game-over': 'La partida terminó.',
 }
 
@@ -43,19 +43,18 @@ export default function DailyGame({ now = new Date() }: DailyGameProps) {
   const attemptsUsed = getAttemptsUsed(game)
   const isPlaying = game.status === 'playing'
   const allowedLetters = getAllowedNextLetters(game, input)
+  const isInputOutsideRange = !isInputPrefixWithinRange(game, input)
+  const displayedNotice = isInputOutsideRange ? 'Palabra fuera de rango' : notice
 
   function updateInput(value: string) {
-    setInput(constrainInputToRange(game, value))
+    setInput([...value].slice(0, game.dictionary.wordLength).join(''))
     setNotice('')
   }
 
   function appendLetter(letter: string) {
     if (!isPlaying || [...input].length >= game.dictionary.wordLength) return
 
-    const normalizedLetter = letter.toLocaleLowerCase('es-CL')
-    if (!allowedLetters.includes(normalizedLetter)) return
-
-    updateInput(`${input}${normalizedLetter}`)
+    updateInput(`${input}${letter.toLocaleLowerCase('es-CL')}`)
   }
 
   function deleteLetter() {
@@ -95,6 +94,7 @@ export default function DailyGame({ now = new Date() }: DailyGameProps) {
             value={input}
             wordLength={game.dictionary.wordLength}
             disabled={!isPlaying}
+            outsideRange={isInputOutsideRange}
             onChange={updateInput}
           />
 
@@ -109,11 +109,12 @@ export default function DailyGame({ now = new Date() }: DailyGameProps) {
       <p
         id="game-notice"
         className="game-notice"
-        data-visible={notice.length > 0}
+        data-tone={isInputOutsideRange ? 'alert' : 'default'}
+        data-visible={displayedNotice.length > 0}
         role="status"
         aria-live="polite"
       >
-        {notice}
+        {displayedNotice}
       </p>
 
       <OnScreenKeyboard
@@ -166,11 +167,13 @@ function GuessRow({
   value,
   wordLength,
   disabled,
+  outsideRange,
   onChange,
 }: Readonly<{
   value: string
   wordLength: number
   disabled: boolean
+  outsideRange: boolean
   onChange: (value: string) => void
 }>) {
   const letters = [...value.toLocaleUpperCase('es-CL')]
@@ -191,14 +194,18 @@ function GuessRow({
         enterKeyHint="done"
         spellCheck={false}
         disabled={disabled}
+        aria-invalid={outsideRange || undefined}
         aria-describedby="game-notice"
         className="native-guess-input"
         onChange={(event) => onChange(event.target.value)}
       />
-      <div className="letter-row guess-row" aria-hidden="true">
+      <div
+        className={`letter-row guess-row ${outsideRange ? 'guess-row-alert' : ''}`}
+        aria-hidden="true"
+      >
         {Array.from({ length: wordLength }, (_, index) => (
           <span
-            className={`letter-tile ${index === letters.length && !disabled ? 'guess-caret' : ''}`}
+            className={`letter-tile ${index === letters.length && !disabled ? 'guess-caret' : ''} ${outsideRange && letters[index] ? 'letter-tile-alert' : ''}`}
             key={index}
           >
             {letters[index] ?? ''}
@@ -262,8 +269,8 @@ function OnScreenKeyboard({
               <button
                 className={`key ${isRangeBlocked ? 'key-range-blocked' : ''}`}
                 type="button"
-                aria-label={`Letra ${letter}`}
-                disabled={disabled || isRangeBlocked}
+                aria-label={`Letra ${letter}${isRangeBlocked ? ', fuera del rango actual' : ''}`}
+                disabled={disabled}
                 onClick={() => onLetter(letter)}
                 key={letter}
               >
@@ -304,39 +311,4 @@ function getDistanceLabel(percentage: number | null): string {
   return percentage === null
     ? 'La distancia aparecerá después del primer intento válido.'
     : `Distancia: ${formatDistancePercentage(percentage)}`
-}
-
-function constrainInputToRange(
-  game: Parameters<typeof getAllowedNextLetters>[0],
-  rawValue: string,
-): string {
-  const letters = [...rawValue.normalize('NFC')].slice(0, game.dictionary.wordLength)
-  const normalizedLetters: string[] = []
-
-  for (const letter of letters) {
-    const normalized = normalizeInput(letter)
-
-    if (!normalized.ok || countLetters(normalized.inputKey) !== 1) {
-      return letters.join('')
-    }
-
-    normalizedLetters.push(normalized.inputKey)
-  }
-
-  let constrainedValue = ''
-
-  for (let index = 0; index < letters.length; index += 1) {
-    const normalizedLetter = normalizedLetters[index]
-
-    if (
-      !normalizedLetter ||
-      !getAllowedNextLetters(game, constrainedValue).includes(normalizedLetter)
-    ) {
-      break
-    }
-
-    constrainedValue += letters[index] ?? ''
-  }
-
-  return constrainedValue
 }

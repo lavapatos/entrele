@@ -105,7 +105,8 @@ describe('App', () => {
   it('permite cambiar y conservar la paleta y el modo', () => {
     renderPrototype()
 
-    fireEvent.click(screen.getByLabelText('Cambiar tema'))
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar tema' }))
+    expect(screen.getByRole('dialog', { name: 'Tema' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Paleta B' }))
     fireEvent.click(screen.getByRole('button', { name: 'Modo oscuro' }))
 
@@ -121,6 +122,7 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cómo jugar' }))
     expect(screen.getByRole('dialog', { name: 'Cómo jugar' })).toBeInTheDocument()
     expect(screen.getByText('Escribe una palabra de cinco letras.')).toBeInTheDocument()
+    expect(screen.getByText(/según el orden alfabético/)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
 
     submit('radio')

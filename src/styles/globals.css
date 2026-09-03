@@ -180,19 +180,6 @@ summary {
   text-indent: 0.11em;
 }
 
-.theme-settings {
-  position: relative;
-}
-
-.theme-trigger {
-  list-style: none;
-}
-
-.theme-trigger::-webkit-details-marker {
-  display: none;
-}
-
-.theme-trigger:focus-visible,
 .theme-option:focus-visible,
 .tool-button:focus-visible,
 .dialog-close:focus-visible,
@@ -202,16 +189,8 @@ summary {
   outline-offset: 3px;
 }
 
-.theme-menu {
-  position: absolute;
-  z-index: 3;
-  right: 0;
-  bottom: calc(100% + 0.5rem);
-  width: min(17.5rem, calc(100vw - 1.5rem));
-  padding: 1rem;
-  border: 1px solid var(--color-tile-border);
-  border-radius: 2px;
-  background: var(--color-input);
+.theme-controls {
+  width: 100%;
 }
 
 .theme-fieldset {
@@ -333,7 +312,6 @@ summary {
 }
 
 .tool-button:hover,
-.theme-settings[open] .theme-trigger,
 .dialog-close:hover {
   border-color: var(--color-key-border);
   background: var(--color-key);
@@ -347,8 +325,14 @@ summary {
 }
 
 .game-dialog {
+  position: fixed;
+  inset: 0;
   width: min(21rem, calc(100vw - 2rem));
+  height: fit-content;
+  max-height: calc(100dvh - 2rem);
   padding: 1.3rem;
+  margin: auto;
+  overflow-y: auto;
   border: 1px solid var(--color-tile-border);
   border-radius: 2px;
   background: var(--color-input);
@@ -364,8 +348,7 @@ summary {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding-bottom: 0.9rem;
-  border-bottom: 1px solid var(--color-key-border);
+  margin-bottom: 0.9rem;
 }
 
 .dialog-heading h2 {
@@ -393,14 +376,10 @@ summary {
   grid-template-columns: 1.5rem minmax(0, 1fr);
   gap: 0.7rem;
   align-items: baseline;
-  padding: 0.9rem 0;
+  padding: 0.55rem 0;
   counter-increment: help-step;
   font-size: 0.88rem;
   line-height: 1.4;
-}
-
-.help-steps li + li {
-  border-top: 1px solid var(--color-key-border);
 }
 
 .help-steps li::before {
@@ -411,7 +390,7 @@ summary {
 }
 
 .session-status {
-  margin: 1rem 0;
+  margin: 0 0 1rem;
   color: var(--color-status);
   font-size: 0.8rem;
   font-weight: 700;

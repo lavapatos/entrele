@@ -1,5 +1,7 @@
 import { MagicWand } from '@phosphor-icons/react'
+import { useState } from 'react'
 
+import AppDialog from '../../components/AppDialog'
 import type { ThemeModePreference, ThemePalette } from '../../theme/useTheme'
 
 type ThemeSettingsProps = Readonly<{
@@ -15,55 +17,65 @@ export default function ThemeSettings({
   mode,
   onModeChange,
 }: ThemeSettingsProps) {
-  return (
-    <details className="theme-settings">
-      <summary className="tool-button theme-trigger" aria-label="Cambiar tema">
-        <MagicWand size={22} weight="regular" aria-hidden="true" />
-      </summary>
-      <div className="theme-menu">
-        <fieldset className="theme-fieldset">
-          <legend>Paleta</legend>
-          <div className="theme-options">
-            <ThemeOption
-              active={palette === 'a'}
-              label="A"
-              accessibleLabel="Paleta A"
-              onSelect={() => onPaletteChange('a')}
-            />
-            <ThemeOption
-              active={palette === 'b'}
-              label="B"
-              accessibleLabel="Paleta B"
-              onSelect={() => onPaletteChange('b')}
-            />
-          </div>
-        </fieldset>
+  const [open, setOpen] = useState(false)
 
-        <fieldset className="theme-fieldset">
-          <legend>Modo</legend>
-          <div className="theme-options theme-options-wide">
-            <ThemeOption
-              active={mode === 'system'}
-              label="Sistema"
-              accessibleLabel="Usar modo del sistema"
-              onSelect={() => onModeChange('system')}
-            />
-            <ThemeOption
-              active={mode === 'light'}
-              label="Claro"
-              accessibleLabel="Modo claro"
-              onSelect={() => onModeChange('light')}
-            />
-            <ThemeOption
-              active={mode === 'dark'}
-              label="Oscuro"
-              accessibleLabel="Modo oscuro"
-              onSelect={() => onModeChange('dark')}
-            />
-          </div>
-        </fieldset>
-      </div>
-    </details>
+  return (
+    <>
+      <button
+        className="tool-button"
+        type="button"
+        aria-label="Cambiar tema"
+        onClick={() => setOpen(true)}
+      >
+        <MagicWand size={22} weight="regular" aria-hidden="true" />
+      </button>
+
+      <AppDialog open={open} title="Tema" onClose={() => setOpen(false)}>
+        <div className="theme-controls">
+          <fieldset className="theme-fieldset">
+            <legend>Paleta</legend>
+            <div className="theme-options">
+              <ThemeOption
+                active={palette === 'a'}
+                label="A"
+                accessibleLabel="Paleta A"
+                onSelect={() => onPaletteChange('a')}
+              />
+              <ThemeOption
+                active={palette === 'b'}
+                label="B"
+                accessibleLabel="Paleta B"
+                onSelect={() => onPaletteChange('b')}
+              />
+            </div>
+          </fieldset>
+
+          <fieldset className="theme-fieldset">
+            <legend>Modo</legend>
+            <div className="theme-options theme-options-wide">
+              <ThemeOption
+                active={mode === 'system'}
+                label="Sistema"
+                accessibleLabel="Usar modo del sistema"
+                onSelect={() => onModeChange('system')}
+              />
+              <ThemeOption
+                active={mode === 'light'}
+                label="Claro"
+                accessibleLabel="Modo claro"
+                onSelect={() => onModeChange('light')}
+              />
+              <ThemeOption
+                active={mode === 'dark'}
+                label="Oscuro"
+                accessibleLabel="Modo oscuro"
+                onSelect={() => onModeChange('dark')}
+              />
+            </div>
+          </fieldset>
+        </div>
+      </AppDialog>
+    </>
   )
 }
 

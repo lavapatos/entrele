@@ -560,17 +560,18 @@ summary {
   z-index: 1;
   left: 50%;
   display: grid;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.15rem;
+  height: 2.15rem;
   place-items: center;
   transform: translate(-50%, -50%);
   border: 0;
   border-radius: 50%;
   background: var(--color-accent);
   color: var(--color-accent-text);
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
+  font-size: 0.62rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: 0;
   white-space: nowrap;
 }
 

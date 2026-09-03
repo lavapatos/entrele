@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import { getDistancePercent } from '../game/compare'
 import { GAME_DICTIONARY } from '../game/game-data'
@@ -7,6 +7,12 @@ import App from './App'
 
 describe('App', () => {
   const prototypeDate = new Date('2026-01-01T12:00:00Z')
+
+  beforeEach(() => {
+    window.localStorage.clear()
+    delete document.documentElement.dataset.palette
+    delete document.documentElement.dataset.mode
+  })
 
   function renderPrototype() {
     render(<App now={prototypeDate} />)
@@ -19,13 +25,14 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Probar' }))
   }
 
-  it('muestra una partida técnica con el rango completo', () => {
+  it('muestra la partida con el rango completo y los intentos disponibles', () => {
     renderPrototype()
 
     expect(screen.getByRole('heading', { name: 'ENTRELE' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Partida técnica' })).toBeInTheDocument()
-    expect(screen.getByText('Intentos: 0 de 10')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Distancia porcentual' })).toBeInTheDocument()
+    expect(screen.getByLabelText('0 de 10 intentos usados')).toBeInTheDocument()
+    expect(screen.getByLabelText('Límite inferior: AAAAA')).toBeInTheDocument()
+    expect(screen.getByLabelText('Límite superior: ZZZZZ')).toBeInTheDocument()
+    expect(screen.getByLabelText('Palabra de cinco letras')).toBeEnabled()
   })
 
   it('actualiza el intervalo y permite ganar', () => {
@@ -33,8 +40,8 @@ describe('App', () => {
 
     submit('radio')
 
-    expect(screen.getByRole('status')).toHaveTextContent('La respuesta está antes de radio.')
-    expect(screen.getByText('Intentos: 1 de 10')).toBeInTheDocument()
+    expect(screen.getByLabelText('1 de 10 intentos usados')).toBeInTheDocument()
+    expect(screen.getByLabelText('Límite superior: RADIO')).toBeInTheDocument()
     const mango = GAME_DICTIONARY.entriesByInputKey.mango
     const radio = GAME_DICTIONARY.entriesByInputKey.radio
 
@@ -44,19 +51,12 @@ describe('App', () => {
       Math.abs(mango.sortRank - radio.sortRank),
       GAME_DICTIONARY.entries.length,
     )
-    expect(
-      screen.getByText(
-        `La distancia equivale a ${Math.round(distance)}% del diccionario completo.`,
-      ),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByText('La respuesta está más cerca de radio, el límite superior.'),
-    ).toBeInTheDocument()
+    expect(screen.getByText(formatDistance(distance))).toBeInTheDocument()
 
     submit('mango')
 
-    expect(screen.getByRole('status')).toHaveTextContent('Encontraste mango.')
-    expect(screen.getByText('Partida resuelta en 2 intentos.')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('¡Ganaste!')
+    expect(screen.getByLabelText('2 de 10 intentos usados')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Probar' })).toBeDisabled()
   })
 
@@ -66,9 +66,24 @@ describe('App', () => {
     submit('radio')
     submit('zorro')
 
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'Esa palabra ya quedó fuera del intervalo. No perdiste un intento.',
-    )
-    expect(screen.getByText('Intentos: 1 de 10')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Quedó fuera del intervalo.')
+    expect(screen.getByLabelText('1 de 10 intentos usados')).toBeInTheDocument()
+  })
+
+  it('permite cambiar y conservar la paleta y el modo', () => {
+    renderPrototype()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Paleta B' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Modo oscuro' }))
+
+    expect(document.documentElement.dataset.palette).toBe('b')
+    expect(document.documentElement.dataset.mode).toBe('dark')
+    expect(window.localStorage.getItem('entrele:palette')).toBe('b')
+    expect(window.localStorage.getItem('entrele:mode')).toBe('dark')
   })
 })
+
+function formatDistance(distance: number): string {
+  if (distance > 0 && distance < 1) return '<1%'
+  return `${Math.round(distance)}%`
+}

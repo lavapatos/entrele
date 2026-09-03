@@ -5,6 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="ENTRELE, un juego diario de palabras en español." />
     <title>ENTRELE</title>
+    <script>
+      ;(() => {
+        try {
+          const palette = window.localStorage.getItem('entrele:palette')
+          const preference = window.localStorage.getItem('entrele:mode')
+          const systemDark =
+            typeof window.matchMedia === 'function' &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches
+
+          document.documentElement.dataset.palette = palette === 'b' ? 'b' : 'a'
+          document.documentElement.dataset.mode =
+            preference === 'dark' || (preference !== 'light' && systemDark) ? 'dark' : 'light'
+        } catch {
+          document.documentElement.dataset.palette = 'a'
+          document.documentElement.dataset.mode = 'light'
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

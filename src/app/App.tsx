@@ -1,19 +1,29 @@
-import PrototypeGame from '../features/game/PrototypeGame'
+import DailyGame from '../features/game/DailyGame'
+import ThemeSettings from '../features/theme/ThemeSettings'
+import { useTheme } from '../theme/useTheme'
 
 type AppProps = Readonly<{
   now?: Date
 }>
 
 export default function App({ now }: AppProps) {
+  const { palette, setPalette, modePreference, setModePreference } = useTheme()
+
   return (
-    <main className="min-h-dvh bg-stone-50 px-6 py-10 text-stone-950">
-      <div className="mx-auto w-full max-w-2xl">
-        <header className="mb-10">
-          <p className="mb-2 text-sm tracking-wide text-stone-600">Juego diario de palabras</p>
-          <h1 className="text-4xl font-semibold tracking-tight">ENTRELE</h1>
+    <main className="game-page">
+      <div className="game-shell">
+        <header className="game-header">
+          <span aria-hidden="true" />
+          <h1 className="game-title">ENTRELE</h1>
+          <ThemeSettings
+            palette={palette}
+            onPaletteChange={setPalette}
+            mode={modePreference}
+            onModeChange={setModePreference}
+          />
         </header>
 
-        <PrototypeGame now={now} />
+        <DailyGame now={now} />
       </div>
     </main>
   )

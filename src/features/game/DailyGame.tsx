@@ -12,6 +12,7 @@ import {
 } from '../../game/selectors'
 import type { GuessRejectionReason, RangeBound, SubmitGuessResult } from '../../game/types'
 import { formatDistancePercentage, getDistanceMarkerPosition } from './distance-display'
+import GameResultDialog from './GameResultDialog'
 import GameTools from './GameTools'
 
 type DailyGameProps = Readonly<{
@@ -40,6 +41,7 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
   const [game, setGame] = useState(session.game)
   const [input, setInput] = useState('')
   const [notice, setNotice] = useState('')
+  const [resultOpen, setResultOpen] = useState(false)
   const range = getRemainingRange(game)
   const proximity = getRangeProximity(game)
   const attemptsUsed = getAttemptsUsed(game)
@@ -76,6 +78,7 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
     setGame(submission.state)
     setInput('')
     setNotice(getAcceptedNotice(submission))
+    setResultOpen(submission.state.status !== 'playing')
   }
 
   return (
@@ -133,6 +136,16 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
         onLetter={appendLetter}
         onDelete={deleteLetter}
       />
+
+      {game.status === 'playing' ? null : (
+        <GameResultDialog
+          open={resultOpen}
+          status={game.status}
+          answer={game.answer.display}
+          attemptsUsed={attemptsUsed}
+          onClose={() => setResultOpen(false)}
+        />
+      )}
     </form>
   )
 }

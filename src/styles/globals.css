@@ -432,6 +432,25 @@ summary {
   text-overflow: ellipsis;
 }
 
+.result-word {
+  margin: 1rem 0 0;
+  font-family: 'Comfortaa Variable', 'Trebuchet MS', sans-serif;
+  font-size: clamp(1.9rem, 10vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.1;
+  text-align: center;
+  text-indent: 0.12em;
+}
+
+.result-attempts {
+  margin: 0.65rem 0 0;
+  color: var(--color-quiet);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+}
+
 .letter-row {
   display: grid;
   grid-template-columns: repeat(5, 1fr);

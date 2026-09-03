@@ -57,6 +57,9 @@ describe('App', () => {
     submit('mango')
 
     expect(screen.getByRole('status')).toHaveTextContent('¡Ganaste!')
+    expect(screen.getByRole('dialog', { name: 'Ganaste' })).toBeInTheDocument()
+    expect(screen.getByText('MANGO')).toBeInTheDocument()
+    expect(screen.getByText('2 intentos')).toBeInTheDocument()
     expect(screen.getByLabelText('2 de 10 intentos usados')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Probar' })).toBeDisabled()
   })
@@ -77,6 +80,20 @@ describe('App', () => {
     expect(input).toHaveValue('zorro')
     expect(screen.getByRole('status')).toHaveTextContent('Palabra fuera de rango')
     expect(screen.getByLabelText('1 de 10 intentos usados')).toBeInTheDocument()
+  })
+
+  it('muestra la respuesta al terminar sin intentos', () => {
+    renderPrototype()
+
+    const answer = GAME_DICTIONARY.entriesByInputKey.mango
+    if (!answer) throw new Error('Falta la respuesta necesaria para la prueba.')
+
+    const losingGuesses = GAME_DICTIONARY.entries.slice(answer.sortRank - 10, answer.sortRank)
+    losingGuesses.forEach((guess) => submit(guess.inputKey))
+
+    expect(screen.getByRole('dialog', { name: 'La palabra era' })).toBeInTheDocument()
+    expect(screen.getByText('MANGO')).toBeInTheDocument()
+    expect(screen.getByText('10 intentos')).toBeInTheDocument()
   })
 
   it('marca las letras que salen del intervalo, pero permite usarlas', () => {

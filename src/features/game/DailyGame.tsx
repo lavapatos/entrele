@@ -46,6 +46,7 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
   const range = getRemainingRange(game)
   const proximity = getRangeProximity(game)
   const attemptsUsed = getAttemptsUsed(game)
+  const lastGuess = game.guesses[game.guesses.length - 1]
   const isPlaying = game.status === 'playing'
   const allowedLetters = getAllowedNextLetters(game, input)
   const isInputOutsideRange = !isInputPrefixWithinRange(game, input)
@@ -92,9 +93,11 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
 
         <div className="range-stack">
           <BoundRow
+            key={`lower-${range.lower.rank}`}
             bound={range.lower}
             position="inferior"
             wordLength={game.dictionary.wordLength}
+            animate={lastGuess?.relation === 'before'}
           />
 
           <GuessRow
@@ -107,9 +110,11 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
           />
 
           <BoundRow
+            key={`upper-${range.upper.rank}`}
             bound={range.upper}
             position="superior"
             wordLength={game.dictionary.wordLength}
+            animate={lastGuess?.relation === 'after'}
           />
         </div>
 
@@ -171,18 +176,23 @@ function BoundRow({
   bound,
   position,
   wordLength,
+  animate,
 }: Readonly<{
   bound: RangeBound
   position: 'inferior' | 'superior'
   wordLength: number
+  animate: boolean
 }>) {
   const letters = getBoundLetters(bound, wordLength)
 
   return (
-    <div className="letter-row bound-row" aria-label={`Límite ${position}: ${letters.join('')}`}>
+    <div
+      className={`letter-row bound-row ${animate ? `bound-row-updated bound-row-${position}` : ''}`}
+      aria-label={`Límite ${position}: ${letters.join('')}`}
+    >
       {letters.map((letter, index) => (
         <span className="letter-tile" key={`${letter}-${index}`} aria-hidden="true">
-          {letter}
+          <span className="bound-letter">{letter}</span>
         </span>
       ))}
     </div>

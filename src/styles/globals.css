@@ -47,6 +47,7 @@
   --motion-fast: 160ms;
   --motion-normal: 240ms;
   --motion-slow: 420ms;
+  --motion-letter-stagger: 40ms;
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -287,10 +288,11 @@ summary {
 }
 
 .range-stack {
+  --range-row-gap: clamp(1.2rem, 5vw, 1.75rem);
   display: grid;
   grid-column: 2;
   grid-template-rows: repeat(3, auto);
-  gap: clamp(1.2rem, 5vw, 1.75rem);
+  gap: var(--range-row-gap);
 }
 
 .game-tools {
@@ -461,6 +463,65 @@ summary {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: clamp(0.28rem, 1.6vw, 0.45rem);
+}
+
+.bound-row-updated {
+  position: relative;
+  z-index: 2;
+}
+
+.bound-row .letter-tile {
+  position: relative;
+}
+
+.bound-letter {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.bound-row-updated .bound-letter {
+  animation-duration: var(--motion-slow);
+  animation-fill-mode: both;
+  animation-timing-function: var(--ease-settle);
+}
+
+.bound-row-updated .letter-tile:nth-child(2) .bound-letter {
+  animation-delay: var(--motion-letter-stagger);
+}
+
+.bound-row-updated .letter-tile:nth-child(3) .bound-letter {
+  animation-delay: calc(var(--motion-letter-stagger) * 2);
+}
+
+.bound-row-updated .letter-tile:nth-child(4) .bound-letter {
+  animation-delay: calc(var(--motion-letter-stagger) * 3);
+}
+
+.bound-row-updated .letter-tile:nth-child(5) .bound-letter {
+  animation-delay: calc(var(--motion-letter-stagger) * 4);
+}
+
+.bound-row-inferior .bound-letter {
+  animation-name: bound-letter-rise;
+}
+
+.bound-row-superior .bound-letter {
+  animation-name: bound-letter-fall;
+}
+
+@keyframes bound-letter-rise {
+  from {
+    transform: translateY(calc(100% + var(--range-row-gap)));
+  }
+}
+
+@keyframes bound-letter-fall {
+  from {
+    transform: translateY(calc(-100% - var(--range-row-gap)));
+  }
 }
 
 .letter-tile {
@@ -683,6 +744,7 @@ summary {
 
 @media (prefers-reduced-motion: reduce) {
   .distance-marker,
+  .bound-row-updated .bound-letter,
   .guess-row-rejected {
     animation: none;
   }

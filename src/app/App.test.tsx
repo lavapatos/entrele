@@ -42,7 +42,9 @@ describe('App', () => {
     submit('radio')
 
     expect(screen.getByLabelText('1 de 10 intentos usados')).toBeInTheDocument()
-    expect(screen.getByLabelText('Límite superior: RADIO')).toBeInTheDocument()
+    const updatedUpperBound = screen.getByLabelText('Límite superior: RADIO')
+    expect(updatedUpperBound).toHaveClass('bound-row-updated', 'bound-row-superior')
+    expect(updatedUpperBound.querySelectorAll('.bound-letter')).toHaveLength(5)
     const mango = GAME_DICTIONARY.entriesByInputKey.mango
     const radio = GAME_DICTIONARY.entriesByInputKey.radio
 

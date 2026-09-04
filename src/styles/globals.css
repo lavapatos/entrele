@@ -349,7 +349,7 @@ summary {
 }
 
 .game-dialog[open] {
-  animation: dialog-enter var(--motion-normal) var(--ease-settle) both;
+  animation: dialog-enter var(--motion-slow) var(--ease-settle) both;
 }
 
 .game-dialog::backdrop {
@@ -357,13 +357,13 @@ summary {
 }
 
 .game-dialog[open]::backdrop {
-  animation: dialog-backdrop-enter var(--motion-fast) var(--ease-standard) both;
+  animation: dialog-backdrop-enter var(--motion-normal) var(--ease-standard) both;
 }
 
 @keyframes dialog-enter {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(12px);
   }
 }
 

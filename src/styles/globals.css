@@ -483,7 +483,7 @@ summary {
 }
 
 .bound-row-updated .bound-letter {
-  animation-duration: var(--motion-slow);
+  animation-duration: calc(var(--motion-slow) + var(--motion-fast));
   animation-fill-mode: both;
   animation-timing-function: var(--ease-settle);
 }

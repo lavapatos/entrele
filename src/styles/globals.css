@@ -348,8 +348,29 @@ summary {
   color: var(--color-ink);
 }
 
+.game-dialog[open] {
+  animation: dialog-enter var(--motion-normal) var(--ease-settle) both;
+}
+
 .game-dialog::backdrop {
   background: rgb(16 21 24 / 58%);
+}
+
+.game-dialog[open]::backdrop {
+  animation: dialog-backdrop-enter var(--motion-fast) var(--ease-standard) both;
+}
+
+@keyframes dialog-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes dialog-backdrop-enter {
+  from {
+    opacity: 0;
+  }
 }
 
 .dialog-heading {
@@ -777,6 +798,8 @@ summary {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .game-dialog[open],
+  .game-dialog[open]::backdrop,
   .distance-marker,
   .bound-row-updated .bound-letter,
   .guess-row-correct .letter-tile,

@@ -42,6 +42,7 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
   const [input, setInput] = useState('')
   const [notice, setNotice] = useState('')
   const [resultOpen, setResultOpen] = useState(false)
+  const [rejectionSequence, setRejectionSequence] = useState(0)
   const range = getRemainingRange(game)
   const proximity = getRangeProximity(game)
   const attemptsUsed = getAttemptsUsed(game)
@@ -72,6 +73,7 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
 
     if (!submission.accepted) {
       setNotice(REJECTION_MESSAGES[submission.reason])
+      setRejectionSequence((current) => current + 1)
       return
     }
 
@@ -100,6 +102,7 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
             wordLength={game.dictionary.wordLength}
             disabled={!isPlaying}
             outsideRange={isInputOutsideRange}
+            rejectionSequence={rejectionSequence}
             onChange={updateInput}
           />
 
@@ -191,12 +194,14 @@ function GuessRow({
   wordLength,
   disabled,
   outsideRange,
+  rejectionSequence,
   onChange,
 }: Readonly<{
   value: string
   wordLength: number
   disabled: boolean
   outsideRange: boolean
+  rejectionSequence: number
   onChange: (value: string) => void
 }>) {
   const letters = [...value.toLocaleUpperCase('es-CL')]
@@ -223,7 +228,8 @@ function GuessRow({
         onChange={(event) => onChange(event.target.value)}
       />
       <div
-        className={`letter-row guess-row ${outsideRange ? 'guess-row-alert' : ''}`}
+        key={rejectionSequence}
+        className={`letter-row guess-row ${outsideRange ? 'guess-row-alert' : ''} ${rejectionSequence > 0 ? 'guess-row-rejected' : ''}`}
         aria-hidden="true"
       >
         {Array.from({ length: wordLength }, (_, index) => (

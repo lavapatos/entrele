@@ -515,6 +515,25 @@ summary {
   background: var(--color-alert);
 }
 
+.guess-row-rejected {
+  animation: guess-reject var(--motion-fast) var(--ease-standard);
+}
+
+@keyframes guess-reject {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  35% {
+    transform: translateX(-3px);
+  }
+
+  70% {
+    transform: translateX(3px);
+  }
+}
+
 .guess-caret::after {
   width: 1px;
   height: 1.35rem;
@@ -663,8 +682,12 @@ summary {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .distance-marker {
+  .distance-marker,
+  .guess-row-rejected {
     animation: none;
+  }
+
+  .distance-marker {
     transition: none;
   }
 }

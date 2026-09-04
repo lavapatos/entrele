@@ -78,6 +78,7 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Probar' }))
 
     expect(input).toHaveValue('zorro')
+    expect(document.querySelector('.guess-row')).toHaveClass('guess-row-rejected')
     expect(screen.getByRole('status')).toHaveTextContent('Palabra fuera de rango')
     expect(screen.getByLabelText('1 de 10 intentos usados')).toBeInTheDocument()
   })

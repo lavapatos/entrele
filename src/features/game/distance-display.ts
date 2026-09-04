@@ -1,19 +1,28 @@
+import type { GuessRelation } from '../../game/types'
+
 const TRACK_TOP_PERCENT = 14
 const TRACK_BOTTOM_PERCENT = 86
 const MINIMUM_NONZERO_PROGRESS = 0.2
 const CURVE_STRENGTH = 99
 
-export function getDistanceMarkerPosition(percentage: number): number {
+export function getDistanceMarkerPosition(percentage: number, relation: GuessRelation): number {
   const boundedPercentage = Math.max(0, Math.min(100, percentage))
 
-  if (boundedPercentage === 0) return TRACK_BOTTOM_PERCENT
+  if (relation === 'equal') return 50
+
+  if (boundedPercentage === 0) {
+    return relation === 'before' ? TRACK_TOP_PERCENT : TRACK_BOTTOM_PERCENT
+  }
 
   const normalizedPercentage = boundedPercentage / 100
   const curvedProgress =
     Math.log1p(CURVE_STRENGTH * normalizedPercentage) / Math.log1p(CURVE_STRENGTH)
   const visibleProgress = MINIMUM_NONZERO_PROGRESS + (1 - MINIMUM_NONZERO_PROGRESS) * curvedProgress
+  const trackLength = TRACK_BOTTOM_PERCENT - TRACK_TOP_PERCENT
 
-  return TRACK_BOTTOM_PERCENT - visibleProgress * (TRACK_BOTTOM_PERCENT - TRACK_TOP_PERCENT)
+  return relation === 'before'
+    ? TRACK_TOP_PERCENT + visibleProgress * trackLength
+    : TRACK_BOTTOM_PERCENT - visibleProgress * trackLength
 }
 
 export function formatDistancePercentage(percentage: number): string {

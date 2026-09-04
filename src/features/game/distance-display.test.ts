@@ -14,10 +14,22 @@ describe('presentación de distancia', () => {
   })
 
   it('amplía visualmente las distancias pequeñas sin alterar el porcentaje', () => {
-    expect(getDistanceMarkerPosition(0)).toBe(86)
-    expect(getDistanceMarkerPosition(0.01)).toBeLessThan(75)
-    expect(getDistanceMarkerPosition(0.01)).toBeGreaterThan(14)
-    expect(getDistanceMarkerPosition(1)).toBeLessThan(getDistanceMarkerPosition(0.01))
-    expect(getDistanceMarkerPosition(100)).toBe(14)
+    expect(getDistanceMarkerPosition(0, 'after')).toBe(86)
+    expect(getDistanceMarkerPosition(0.01, 'after')).toBeLessThan(75)
+    expect(getDistanceMarkerPosition(0.01, 'after')).toBeGreaterThan(14)
+    expect(getDistanceMarkerPosition(1, 'after')).toBeLessThan(
+      getDistanceMarkerPosition(0.01, 'after'),
+    )
+    expect(getDistanceMarkerPosition(100, 'after')).toBe(14)
+    expect(getDistanceMarkerPosition(0, 'equal')).toBe(50)
+  })
+
+  it('acerca el indicador al límite que actualizó la palabra probada', () => {
+    const nearLowerBound = getDistanceMarkerPosition(0.01, 'before')
+    const nearUpperBound = getDistanceMarkerPosition(0.01, 'after')
+
+    expect(nearLowerBound).toBeLessThan(50)
+    expect(nearUpperBound).toBeGreaterThan(50)
+    expect(nearLowerBound + nearUpperBound).toBeCloseTo(100)
   })
 })

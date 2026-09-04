@@ -10,7 +10,12 @@ import {
   getRemainingRange,
   isInputPrefixWithinRange,
 } from '../../game/selectors'
-import type { GuessRejectionReason, RangeBound, SubmitGuessResult } from '../../game/types'
+import type {
+  GuessRejectionReason,
+  GuessRelation,
+  RangeBound,
+  SubmitGuessResult,
+} from '../../game/types'
 import { formatDistancePercentage, getDistanceMarkerPosition } from './distance-display'
 import GameResultDialog from './GameResultDialog'
 import GameTools from './GameTools'
@@ -112,7 +117,10 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
       <AttemptDots used={attemptsUsed} total={game.maxAttempts} />
 
       <section className="playfield" aria-label="Intervalo actual">
-        <DistanceGauge percentage={proximity.lastGuessDistancePercent} />
+        <DistanceGauge
+          percentage={proximity.lastGuessDistancePercent}
+          relation={lastGuess?.relation ?? null}
+        />
 
         <div className="range-stack">
           <BoundRow
@@ -281,14 +289,20 @@ function GuessRow({
   )
 }
 
-function DistanceGauge({ percentage }: Readonly<{ percentage: number | null }>) {
+function DistanceGauge({
+  percentage,
+  relation,
+}: Readonly<{
+  percentage: number | null
+  relation: GuessRelation | null
+}>) {
   return (
     <aside className="distance-gauge" aria-label={getDistanceLabel(percentage)}>
       <span className="distance-track" aria-hidden="true" />
-      {percentage === null ? null : (
+      {percentage === null || relation === null ? null : (
         <span
           className="distance-marker"
-          style={{ top: `${getDistanceMarkerPosition(percentage)}%` }}
+          style={{ top: `${getDistanceMarkerPosition(percentage, relation)}%` }}
         >
           {formatDistancePercentage(percentage)}
         </span>

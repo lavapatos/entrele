@@ -36,7 +36,7 @@ const REJECTION_MESSAGES: Record<GuessRejectionReason, string> = {
   'game-over': 'La partida terminó.',
 }
 
-const CORRECT_RESULT_DELAY_MS = 760
+const CORRECT_RESULT_DELAY_MS = 1050
 
 export default function DailyGame({ now = new Date(), themeControl }: DailyGameProps) {
   const [session] = useState(() => createGameSession(now))

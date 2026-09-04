@@ -48,6 +48,7 @@
   --motion-normal: 240ms;
   --motion-slow: 420ms;
   --motion-letter-stagger: 40ms;
+  --motion-correct-stagger: 55ms;
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -580,23 +581,24 @@ summary {
   border-color: var(--color-accent);
   background: var(--color-accent);
   color: var(--color-accent-text);
-  animation: guess-correct-seal var(--motion-slow) var(--ease-settle) both;
+  animation: guess-correct-seal calc(var(--motion-slow) + var(--motion-normal)) var(--ease-settle)
+    both;
 }
 
 .guess-row-correct .letter-tile:nth-child(2) {
-  animation-delay: var(--motion-letter-stagger);
+  animation-delay: var(--motion-correct-stagger);
 }
 
 .guess-row-correct .letter-tile:nth-child(3) {
-  animation-delay: calc(var(--motion-letter-stagger) * 2);
+  animation-delay: calc(var(--motion-correct-stagger) * 2);
 }
 
 .guess-row-correct .letter-tile:nth-child(4) {
-  animation-delay: calc(var(--motion-letter-stagger) * 3);
+  animation-delay: calc(var(--motion-correct-stagger) * 3);
 }
 
 .guess-row-correct .letter-tile:nth-child(5) {
-  animation-delay: calc(var(--motion-letter-stagger) * 4);
+  animation-delay: calc(var(--motion-correct-stagger) * 4);
 }
 
 @keyframes guess-correct-seal {

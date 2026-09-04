@@ -66,7 +66,7 @@ describe('App', () => {
       expect(document.querySelector('.guess-row')).toHaveClass('guess-row-correct')
       expect(screen.queryByRole('dialog', { name: 'Ganaste' })).not.toBeInTheDocument()
 
-      act(() => vi.advanceTimersByTime(800))
+      act(() => vi.advanceTimersByTime(1100))
 
       expect(screen.getByRole('dialog', { name: 'Ganaste' })).toBeInTheDocument()
       expect(screen.getByText('MANGO')).toBeInTheDocument()

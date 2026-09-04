@@ -43,6 +43,12 @@
   --color-key-border: #9aadb3;
   --color-status: #7a4050;
   --color-alert: #8c493f;
+  --motion-instant: 90ms;
+  --motion-fast: 160ms;
+  --motion-normal: 240ms;
+  --motion-slow: 420ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 html[data-palette='a'][data-mode='light'] {
@@ -573,6 +579,15 @@ summary {
   font-weight: 700;
   letter-spacing: 0;
   white-space: nowrap;
+  animation: distance-marker-enter var(--motion-fast) var(--ease-standard);
+  transition: top var(--motion-slow) var(--ease-settle);
+}
+
+@keyframes distance-marker-enter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.92);
+  }
 }
 
 .game-notice {
@@ -645,6 +660,13 @@ summary {
 
 .key-range-blocked:hover:not(:disabled) {
   border-color: var(--color-quiet);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .distance-marker {
+    animation: none;
+    transition: none;
+  }
 }
 
 @media (max-width: 360px) {

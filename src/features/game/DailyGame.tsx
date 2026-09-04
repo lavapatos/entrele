@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 
 import { submitGuess } from '../../game/engine'
@@ -36,6 +36,8 @@ const REJECTION_MESSAGES: Record<GuessRejectionReason, string> = {
   'game-over': 'La partida terminó.',
 }
 
+const CORRECT_RESULT_DELAY_MS = 760
+
 export default function DailyGame({ now = new Date(), themeControl }: DailyGameProps) {
   const [session] = useState(() => createGameSession(now))
   const [game, setGame] = useState(session.game)
@@ -43,6 +45,7 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
   const [notice, setNotice] = useState('')
   const [resultOpen, setResultOpen] = useState(false)
   const [rejectionSequence, setRejectionSequence] = useState(0)
+  const resultDelayRef = useRef<number | undefined>(undefined)
   const range = getRemainingRange(game)
   const proximity = getRangeProximity(game)
   const attemptsUsed = getAttemptsUsed(game)
@@ -51,6 +54,15 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
   const allowedLetters = getAllowedNextLetters(game, input)
   const isInputOutsideRange = !isInputPrefixWithinRange(game, input)
   const displayedNotice = isInputOutsideRange ? 'Palabra fuera de rango' : notice
+
+  useEffect(
+    () => () => {
+      if (resultDelayRef.current !== undefined) {
+        window.clearTimeout(resultDelayRef.current)
+      }
+    },
+    [],
+  )
 
   function updateInput(value: string) {
     setInput([...value].slice(0, game.dictionary.wordLength).join(''))
@@ -78,9 +90,20 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
       return
     }
 
+    const didWin = submission.state.status === 'won'
+
     setGame(submission.state)
-    setInput('')
+    setInput(didWin ? input : '')
     setNotice(getAcceptedNotice(submission))
+
+    if (didWin && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      resultDelayRef.current = window.setTimeout(() => {
+        setResultOpen(true)
+        resultDelayRef.current = undefined
+      }, CORRECT_RESULT_DELAY_MS)
+      return
+    }
+
     setResultOpen(submission.state.status !== 'playing')
   }
 
@@ -105,6 +128,7 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
             wordLength={game.dictionary.wordLength}
             disabled={!isPlaying}
             outsideRange={isInputOutsideRange}
+            correct={game.status === 'won'}
             rejectionSequence={rejectionSequence}
             onChange={updateInput}
           />
@@ -204,6 +228,7 @@ function GuessRow({
   wordLength,
   disabled,
   outsideRange,
+  correct,
   rejectionSequence,
   onChange,
 }: Readonly<{
@@ -211,6 +236,7 @@ function GuessRow({
   wordLength: number
   disabled: boolean
   outsideRange: boolean
+  correct: boolean
   rejectionSequence: number
   onChange: (value: string) => void
 }>) {
@@ -239,7 +265,7 @@ function GuessRow({
       />
       <div
         key={rejectionSequence}
-        className={`letter-row guess-row ${outsideRange ? 'guess-row-alert' : ''} ${rejectionSequence > 0 ? 'guess-row-rejected' : ''}`}
+        className={`letter-row guess-row ${outsideRange ? 'guess-row-alert' : ''} ${correct ? 'guess-row-correct' : ''} ${rejectionSequence > 0 ? 'guess-row-rejected' : ''}`}
         aria-hidden="true"
       >
         {Array.from({ length: wordLength }, (_, index) => (

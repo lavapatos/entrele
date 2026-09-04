@@ -576,6 +576,38 @@ summary {
   background: var(--color-alert);
 }
 
+.guess-row-correct .letter-tile {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  animation: guess-correct-seal var(--motion-slow) var(--ease-settle) both;
+}
+
+.guess-row-correct .letter-tile:nth-child(2) {
+  animation-delay: var(--motion-letter-stagger);
+}
+
+.guess-row-correct .letter-tile:nth-child(3) {
+  animation-delay: calc(var(--motion-letter-stagger) * 2);
+}
+
+.guess-row-correct .letter-tile:nth-child(4) {
+  animation-delay: calc(var(--motion-letter-stagger) * 3);
+}
+
+.guess-row-correct .letter-tile:nth-child(5) {
+  animation-delay: calc(var(--motion-letter-stagger) * 4);
+}
+
+@keyframes guess-correct-seal {
+  from {
+    border-color: var(--color-ink);
+    background: var(--color-input);
+    color: var(--color-ink);
+    transform: translateY(-2px);
+  }
+}
+
 .guess-row-rejected {
   animation: guess-reject var(--motion-fast) var(--ease-standard);
 }
@@ -745,6 +777,7 @@ summary {
 @media (prefers-reduced-motion: reduce) {
   .distance-marker,
   .bound-row-updated .bound-letter,
+  .guess-row-correct .letter-tile,
   .guess-row-rejected {
     animation: none;
   }

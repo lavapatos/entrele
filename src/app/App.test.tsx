@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { act, fireEvent, render, screen } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { formatDistancePercentage } from '../features/game/distance-display'
 import { getDistancePercent } from '../game/compare'
@@ -37,33 +37,45 @@ describe('App', () => {
   })
 
   it('actualiza el intervalo y permite ganar', () => {
-    renderPrototype()
+    vi.useFakeTimers()
 
-    submit('radio')
+    try {
+      renderPrototype()
 
-    expect(screen.getByLabelText('1 de 10 intentos usados')).toBeInTheDocument()
-    const updatedUpperBound = screen.getByLabelText('Límite superior: RADIO')
-    expect(updatedUpperBound).toHaveClass('bound-row-updated', 'bound-row-superior')
-    expect(updatedUpperBound.querySelectorAll('.bound-letter')).toHaveLength(5)
-    const mango = GAME_DICTIONARY.entriesByInputKey.mango
-    const radio = GAME_DICTIONARY.entriesByInputKey.radio
+      submit('radio')
 
-    if (!mango || !radio) throw new Error('Faltan palabras necesarias para la prueba.')
+      expect(screen.getByLabelText('1 de 10 intentos usados')).toBeInTheDocument()
+      const updatedUpperBound = screen.getByLabelText('Límite superior: RADIO')
+      expect(updatedUpperBound).toHaveClass('bound-row-updated', 'bound-row-superior')
+      expect(updatedUpperBound.querySelectorAll('.bound-letter')).toHaveLength(5)
+      const mango = GAME_DICTIONARY.entriesByInputKey.mango
+      const radio = GAME_DICTIONARY.entriesByInputKey.radio
 
-    const distance = getDistancePercent(
-      Math.abs(mango.sortRank - radio.sortRank),
-      GAME_DICTIONARY.entries.length,
-    )
-    expect(screen.getByText(formatDistancePercentage(distance))).toBeInTheDocument()
+      if (!mango || !radio) throw new Error('Faltan palabras necesarias para la prueba.')
 
-    submit('mango')
+      const distance = getDistancePercent(
+        Math.abs(mango.sortRank - radio.sortRank),
+        GAME_DICTIONARY.entries.length,
+      )
+      expect(screen.getByText(formatDistancePercentage(distance))).toBeInTheDocument()
 
-    expect(screen.getByRole('status')).toHaveTextContent('¡Ganaste!')
-    expect(screen.getByRole('dialog', { name: 'Ganaste' })).toBeInTheDocument()
-    expect(screen.getByText('MANGO')).toBeInTheDocument()
-    expect(screen.getByText('2 intentos')).toBeInTheDocument()
-    expect(screen.getByLabelText('2 de 10 intentos usados')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Probar' })).toBeDisabled()
+      submit('mango')
+
+      expect(screen.getByRole('status')).toHaveTextContent('¡Ganaste!')
+      expect(screen.getByLabelText('Palabra de cinco letras')).toHaveValue('mango')
+      expect(document.querySelector('.guess-row')).toHaveClass('guess-row-correct')
+      expect(screen.queryByRole('dialog', { name: 'Ganaste' })).not.toBeInTheDocument()
+
+      act(() => vi.advanceTimersByTime(800))
+
+      expect(screen.getByRole('dialog', { name: 'Ganaste' })).toBeInTheDocument()
+      expect(screen.getByText('MANGO')).toBeInTheDocument()
+      expect(screen.getByText('2 intentos')).toBeInTheDocument()
+      expect(screen.getByLabelText('2 de 10 intentos usados')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Probar' })).toBeDisabled()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('advierte una palabra fuera del intervalo y no gasta otro intento', () => {

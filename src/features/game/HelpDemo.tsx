@@ -1,8 +1,8 @@
 const DEMO_WORDS = {
   initialLower: 'AAAAA',
-  before: 'NUBES',
+  before: 'MARÍA',
   outside: 'ZORRO',
-  after: 'TIGRE',
+  after: 'PAPAS',
   initialUpper: 'ZZZZZ',
 } as const
 

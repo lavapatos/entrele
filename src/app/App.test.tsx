@@ -69,6 +69,7 @@ describe('App', () => {
       act(() => vi.advanceTimersByTime(1100))
 
       expect(screen.getByRole('dialog', { name: 'Ganaste' })).toBeInTheDocument()
+      expect(screen.getByRole('img', { name: 'Vaquita feliz' })).toBeInTheDocument()
       expect(screen.getByText('MANGO')).toBeInTheDocument()
       expect(screen.getByText('2 intentos')).toBeInTheDocument()
       expect(screen.getByLabelText('2 de 10 intentos usados')).toBeInTheDocument()
@@ -107,6 +108,7 @@ describe('App', () => {
     losingGuesses.forEach((guess) => submit(guess.inputKey))
 
     expect(screen.getByRole('dialog', { name: 'La palabra era' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Vaquita frustrada' })).toBeInTheDocument()
     expect(screen.getByText('MANGO')).toBeInTheDocument()
     expect(screen.getByText('10 intentos')).toBeInTheDocument()
   })

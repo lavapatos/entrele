@@ -155,6 +155,7 @@ describe('App', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Cómo jugar' }))
     expect(screen.getByRole('dialog', { name: 'Cómo jugar' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Vaquita' })).toBeInTheDocument()
     expect(screen.getByText('Escribe una palabra de cinco letras.')).toBeInTheDocument()
     expect(screen.getByText(/según el orden alfabético/)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }))

@@ -479,6 +479,12 @@ summary {
   animation: cow-defeat-arrive 680ms var(--ease-settle) both;
 }
 
+.cow-mascot[data-mood='neutral'] {
+  width: min(8.25rem, 46vw);
+  margin: -0.15rem auto 0.45rem;
+  animation: cow-neutral-arrive var(--motion-slow) var(--ease-settle) both;
+}
+
 .cow-mascot-body,
 .cow-mascot-eyes {
   position: absolute;
@@ -498,12 +504,38 @@ summary {
   overflow: visible;
 }
 
-.cow-eyes-neutral {
+.cow-mascot:not([data-mood='neutral']) .cow-eyes-neutral-motion {
   animation: cow-neutral-eyes-leave 540ms var(--ease-standard) both;
+}
+
+.cow-mascot[data-mood='neutral'] .cow-eyes-neutral-motion {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cow-neutral-blink 620ms var(--ease-standard) 280ms both;
 }
 
 .cow-eyes-expression {
   animation: cow-expression-eyes-enter 540ms var(--ease-standard) both;
+}
+
+@keyframes cow-neutral-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(0.25rem);
+  }
+}
+
+@keyframes cow-neutral-blink {
+  0%,
+  34%,
+  66%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  50% {
+    transform: scaleY(0.08);
+  }
 }
 
 @keyframes cow-neutral-eyes-leave {
@@ -915,7 +947,7 @@ summary {
   .game-dialog[open],
   .game-dialog[open]::backdrop,
   .cow-mascot,
-  .cow-eyes-neutral,
+  .cow-eyes-neutral-motion,
   .cow-eyes-expression,
   .distance-marker,
   .bound-row-updated .bound-letter,

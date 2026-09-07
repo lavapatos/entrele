@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 
 import AppDialog from '../../components/AppDialog'
 import type { GameStatus } from '../../game/types'
+import CowMascot from './CowMascot'
 
 type OpenPanel = 'help' | 'stats' | null
 
@@ -49,6 +50,7 @@ export default function GameTools({
       </nav>
 
       <AppDialog open={openPanel === 'help'} title="Cómo jugar" onClose={() => setOpenPanel(null)}>
+        {openPanel === 'help' ? <CowMascot mood="neutral" /> : null}
         <ol className="help-steps">
           <li>Escribe una palabra de cinco letras.</li>
           <li>La respuesta está entre ambos límites según el orden alfabético.</li>

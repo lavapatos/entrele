@@ -23,7 +23,7 @@ export default function GameResultDialog({
       title={status === 'won' ? 'Ganaste' : 'La palabra era'}
       onClose={onClose}
     >
-      <CowMascot mood={status === 'won' ? 'victory' : 'defeat'} />
+      {open ? <CowMascot mood={status === 'won' ? 'victory' : 'defeat'} /> : null}
       <p className="result-word">{answer.toLocaleUpperCase('es-CL')}</p>
       <p className="result-attempts">
         {attemptsUsed} {attemptsUsed === 1 ? 'intento' : 'intentos'}

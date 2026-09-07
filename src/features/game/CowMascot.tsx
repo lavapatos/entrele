@@ -1,6 +1,13 @@
+import { useEffect, useState } from 'react'
+
 type CowMascotProps = Readonly<{
   mood: 'neutral' | 'victory' | 'defeat'
 }>
+
+const BLINK_DELAY_MIN_MS = 5_000
+const BLINK_DELAY_RANGE_MS = 4_000
+const DOUBLE_BLINK_DELAY_MS = 820
+const DOUBLE_BLINK_CHANCE = 0.22
 
 const MOOD_LABELS: Record<CowMascotProps['mood'], string> = {
   neutral: 'Vaquita',
@@ -9,6 +16,35 @@ const MOOD_LABELS: Record<CowMascotProps['mood'], string> = {
 }
 
 export default function CowMascot({ mood }: CowMascotProps) {
+  const [blinkSequence, setBlinkSequence] = useState(0)
+
+  useEffect(() => {
+    if (mood !== 'neutral' || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      return
+    }
+
+    let timeoutId: number | undefined
+
+    function scheduleBlink(delay = getBlinkDelay(), allowDoubleBlink = true) {
+      timeoutId = window.setTimeout(() => {
+        setBlinkSequence((current) => current + 1)
+
+        if (allowDoubleBlink && Math.random() < DOUBLE_BLINK_CHANCE) {
+          scheduleBlink(DOUBLE_BLINK_DELAY_MS, false)
+          return
+        }
+
+        scheduleBlink()
+      }, delay)
+    }
+
+    scheduleBlink()
+
+    return () => {
+      if (timeoutId !== undefined) window.clearTimeout(timeoutId)
+    }
+  }, [mood])
+
   return (
     <div className="cow-mascot" data-mood={mood} role="img" aria-label={MOOD_LABELS[mood]}>
       <span className="cow-mascot-body" aria-hidden="true" />
@@ -18,7 +54,7 @@ export default function CowMascot({ mood }: CowMascotProps) {
         aria-hidden="true"
         focusable="false"
       >
-        <g className="cow-eyes-neutral-motion">
+        <g className="cow-eyes-neutral-motion" key={blinkSequence}>
           <g
             transform="translate(-24.841196,433.438327) scale(0.100000,-0.100000)"
             fill="currentColor"
@@ -63,4 +99,8 @@ export default function CowMascot({ mood }: CowMascotProps) {
       </svg>
     </div>
   )
+}
+
+function getBlinkDelay(): number {
+  return BLINK_DELAY_MIN_MS + Math.round(Math.random() * BLINK_DELAY_RANGE_MS)
 }

@@ -126,6 +126,24 @@ describe('App', () => {
     }
   })
 
+  it('muestra el personaje de papas al aceptar PAPAS', () => {
+    vi.useFakeTimers()
+
+    try {
+      renderPrototype()
+
+      submit('papas')
+
+      expect(document.querySelector('.fries-cameo')).toBeInTheDocument()
+      expect(screen.getByLabelText('1 de 10 intentos usados')).toBeInTheDocument()
+
+      act(() => vi.advanceTimersByTime(1200))
+      expect(document.querySelector('.fries-cameo')).not.toBeInTheDocument()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('muestra la respuesta al terminar sin intentos', () => {
     renderPrototype()
 

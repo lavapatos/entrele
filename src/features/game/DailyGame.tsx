@@ -45,6 +45,7 @@ const REJECTION_MESSAGES: Record<GuessRejectionReason, string> = {
 const CORRECT_RESULT_DELAY_MS = 1050
 const CLOSE_GUESS_CAMEO_THRESHOLD_PERCENT = 1
 const FRIES_CAMEO_DURATION_MS = 1200
+const FRIES_EASTER_EGG_WORD = 'papas'
 
 export default function DailyGame({ now = new Date(), themeControl }: DailyGameProps) {
   const [session] = useState(() => createGameSession(now))
@@ -107,18 +108,21 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
 
     const didWin = submission.state.status === 'won'
     const acceptedDistance = getRangeProximity(submission.state).lastGuessDistancePercent
-    const shouldShowFriesCameo =
+    const isFriesEasterEgg = submission.guess.inputKey === FRIES_EASTER_EGG_WORD
+    const isCloseGuessCameo =
       submission.state.status === 'playing' &&
       acceptedDistance !== null &&
       acceptedDistance < CLOSE_GUESS_CAMEO_THRESHOLD_PERCENT &&
       !hasShownFriesCameoRef.current
+    const shouldShowFriesCameo =
+      submission.state.status === 'playing' && (isFriesEasterEgg || isCloseGuessCameo)
 
     setGame(submission.state)
     setInput(didWin ? input : '')
     setNotice(getAcceptedNotice(submission))
 
     if (shouldShowFriesCameo) {
-      hasShownFriesCameoRef.current = true
+      if (isCloseGuessCameo) hasShownFriesCameoRef.current = true
       setShowFriesCameo(true)
       friesCameoDelayRef.current = window.setTimeout(() => {
         setShowFriesCameo(false)

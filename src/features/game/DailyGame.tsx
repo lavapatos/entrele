@@ -17,6 +17,7 @@ import type {
   SubmitGuessResult,
 } from '../../game/types'
 import { formatDistancePercentage, getDistanceMarkerPosition } from './distance-display'
+import FriesMascot from './FriesMascot'
 import GameResultDialog from './GameResultDialog'
 import GameTools from './GameTools'
 
@@ -42,6 +43,8 @@ const REJECTION_MESSAGES: Record<GuessRejectionReason, string> = {
 }
 
 const CORRECT_RESULT_DELAY_MS = 1050
+const CLOSE_GUESS_CAMEO_THRESHOLD_PERCENT = 1
+const FRIES_CAMEO_DURATION_MS = 1200
 
 export default function DailyGame({ now = new Date(), themeControl }: DailyGameProps) {
   const [session] = useState(() => createGameSession(now))
@@ -49,8 +52,11 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
   const [input, setInput] = useState('')
   const [notice, setNotice] = useState('')
   const [resultOpen, setResultOpen] = useState(false)
+  const [showFriesCameo, setShowFriesCameo] = useState(false)
   const [rejectionSequence, setRejectionSequence] = useState(0)
   const resultDelayRef = useRef<number | undefined>(undefined)
+  const friesCameoDelayRef = useRef<number | undefined>(undefined)
+  const hasShownFriesCameoRef = useRef(false)
   const range = getRemainingRange(game)
   const proximity = getRangeProximity(game)
   const attemptsUsed = getAttemptsUsed(game)
@@ -64,6 +70,10 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
     () => () => {
       if (resultDelayRef.current !== undefined) {
         window.clearTimeout(resultDelayRef.current)
+      }
+
+      if (friesCameoDelayRef.current !== undefined) {
+        window.clearTimeout(friesCameoDelayRef.current)
       }
     },
     [],
@@ -96,10 +106,25 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
     }
 
     const didWin = submission.state.status === 'won'
+    const acceptedDistance = getRangeProximity(submission.state).lastGuessDistancePercent
+    const shouldShowFriesCameo =
+      submission.state.status === 'playing' &&
+      acceptedDistance !== null &&
+      acceptedDistance < CLOSE_GUESS_CAMEO_THRESHOLD_PERCENT &&
+      !hasShownFriesCameoRef.current
 
     setGame(submission.state)
     setInput(didWin ? input : '')
     setNotice(getAcceptedNotice(submission))
+
+    if (shouldShowFriesCameo) {
+      hasShownFriesCameoRef.current = true
+      setShowFriesCameo(true)
+      friesCameoDelayRef.current = window.setTimeout(() => {
+        setShowFriesCameo(false)
+        friesCameoDelayRef.current = undefined
+      }, FRIES_CAMEO_DURATION_MS)
+    }
 
     if (didWin && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
       resultDelayRef.current = window.setTimeout(() => {
@@ -120,6 +145,7 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
         <DistanceGauge
           percentage={proximity.lastGuessDistancePercent}
           relation={lastGuess?.relation ?? null}
+          showFriesCameo={showFriesCameo}
         />
 
         <div className="range-stack">
@@ -292,19 +318,31 @@ function GuessRow({
 function DistanceGauge({
   percentage,
   relation,
+  showFriesCameo,
 }: Readonly<{
   percentage: number | null
   relation: GuessRelation | null
+  showFriesCameo: boolean
 }>) {
+  const marker =
+    percentage === null || relation === null
+      ? null
+      : {
+          label: formatDistancePercentage(percentage),
+          position: getDistanceMarkerPosition(percentage, relation),
+        }
+
   return (
     <aside className="distance-gauge" aria-label={getDistanceLabel(percentage)}>
       <span className="distance-track" aria-hidden="true" />
-      {percentage === null || relation === null ? null : (
-        <span
-          className="distance-marker"
-          style={{ top: `${getDistanceMarkerPosition(percentage, relation)}%` }}
-        >
-          {formatDistancePercentage(percentage)}
+      {marker === null ? null : (
+        <span className="distance-marker" style={{ top: `${marker.position}%` }}>
+          {marker.label}
+        </span>
+      )}
+      {!showFriesCameo || marker === null ? null : (
+        <span className="fries-cameo">
+          <FriesMascot />
         </span>
       )}
     </aside>

@@ -1030,6 +1030,7 @@ summary {
 
 .distance-gauge {
   position: relative;
+  z-index: 2;
   grid-column: 1;
   grid-row: 1;
   align-self: stretch;
@@ -1093,6 +1094,84 @@ summary {
   from {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.92);
+  }
+}
+
+.fries-cameo {
+  position: absolute;
+  z-index: 3;
+  top: 14%;
+  left: 50%;
+  width: 3.5rem;
+  aspect-ratio: 1050 / 1160;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 0.7rem));
+  transform-origin: center bottom;
+  animation: fries-cameo-visit 1200ms var(--ease-settle) both;
+}
+
+.fries-mascot {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.fries-mascot-layer {
+  position: absolute;
+  top: -18.9655%;
+  left: -14.2857%;
+  display: block;
+  width: 114.2857%;
+  height: 155.1724%;
+  pointer-events: none;
+  user-select: none;
+}
+
+.fries-mascot-front-ink {
+  clip-path: inset(40.8333% 0 0);
+}
+
+.fries-mascot-limbs {
+  transform-origin: 53% 61%;
+  animation: fries-mascot-wave 1200ms var(--ease-standard) both;
+}
+
+@keyframes fries-cameo-visit {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, calc(-92% - 0.7rem)) scale(0.9);
+  }
+
+  18%,
+  72% {
+    opacity: 1;
+    transform: translate(-50%, calc(-100% - 0.7rem)) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, calc(-106% - 0.7rem)) scale(0.96);
+  }
+}
+
+@keyframes fries-mascot-wave {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+
+  28% {
+    transform: rotate(-3deg);
+  }
+
+  52% {
+    transform: rotate(3deg);
+  }
+
+  74% {
+    transform: rotate(-2deg);
   }
 }
 
@@ -1175,6 +1254,8 @@ summary {
   .cow-eyes-neutral-motion,
   .cow-eyes-expression,
   .distance-marker,
+  .fries-cameo,
+  .fries-mascot-limbs,
   .bound-row-updated .bound-letter,
   .guess-row-correct .letter-tile,
   .guess-row-rejected {
@@ -1183,6 +1264,11 @@ summary {
 
   .distance-marker {
     transition: none;
+  }
+
+  .fries-cameo {
+    opacity: 1;
+    transform: translate(-50%, calc(-100% - 0.7rem));
   }
 
   .help-demo-lower,
@@ -1221,6 +1307,10 @@ summary {
 @media (max-width: 360px) {
   .distance-gauge {
     transform: translateX(-0.25rem);
+  }
+
+  .fries-cameo {
+    width: 3.15rem;
   }
 
   .game-tools {

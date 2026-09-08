@@ -98,6 +98,34 @@ describe('App', () => {
     expect(screen.getByLabelText('1 de 10 intentos usados')).toBeInTheDocument()
   })
 
+  it('muestra una sola vez el personaje de papas tras un intento a menos del uno por ciento', () => {
+    vi.useFakeTimers()
+
+    try {
+      renderPrototype()
+
+      const answer = GAME_DICTIONARY.entriesByInputKey.mango
+      if (!answer) throw new Error('Falta la respuesta necesaria para la prueba.')
+
+      const guessBefore = GAME_DICTIONARY.entries[answer.sortRank - 1]
+      const guessAfter = GAME_DICTIONARY.entries[answer.sortRank + 1]
+      if (!guessBefore || !guessAfter) {
+        throw new Error('Faltan palabras cercanas necesarias para la prueba.')
+      }
+
+      submit(guessBefore.inputKey)
+      expect(document.querySelector('.fries-cameo')).toBeInTheDocument()
+
+      act(() => vi.advanceTimersByTime(1200))
+      expect(document.querySelector('.fries-cameo')).not.toBeInTheDocument()
+
+      submit(guessAfter.inputKey)
+      expect(document.querySelector('.fries-cameo')).not.toBeInTheDocument()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('muestra la respuesta al terminar sin intentos', () => {
     renderPrototype()
 

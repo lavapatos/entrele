@@ -729,6 +729,33 @@ summary {
   overflow: visible;
 }
 
+.cow-victory-sparkles {
+  position: absolute;
+  z-index: 1;
+  inset: -8% -9%;
+  width: 118%;
+  height: 116%;
+  overflow: visible;
+  color: var(--color-ink);
+  fill: currentColor;
+  pointer-events: none;
+}
+
+.cow-victory-sparkles path {
+  opacity: 0.86;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cow-sparkle-arrive 720ms var(--ease-settle) 260ms both;
+}
+
+.cow-victory-sparkles path:nth-child(2) {
+  animation-delay: 390ms;
+}
+
+.cow-victory-sparkles path:nth-child(3) {
+  animation-delay: 510ms;
+}
+
 .cow-mascot:not([data-mood='neutral']) .cow-eyes-neutral-motion {
   animation: cow-neutral-eyes-leave 540ms var(--ease-standard) both;
 }
@@ -784,6 +811,24 @@ summary {
   68%,
   100% {
     opacity: 1;
+  }
+}
+
+@keyframes cow-sparkle-arrive {
+  0%,
+  18% {
+    opacity: 0;
+    transform: scale(0.18) rotate(-10deg);
+  }
+
+  62% {
+    opacity: 0.92;
+    transform: scale(1.12) rotate(3deg);
+  }
+
+  100% {
+    opacity: 0.86;
+    transform: scale(1) rotate(0);
   }
 }
 
@@ -1253,6 +1298,7 @@ summary {
   .cow-mascot,
   .cow-eyes-neutral-motion,
   .cow-eyes-expression,
+  .cow-victory-sparkles path,
   .distance-marker,
   .fries-cameo,
   .fries-mascot-limbs,

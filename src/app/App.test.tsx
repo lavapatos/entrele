@@ -70,6 +70,7 @@ describe('App', () => {
 
       expect(screen.getByRole('dialog', { name: 'Ganaste' })).toBeInTheDocument()
       expect(screen.getByRole('img', { name: 'Vaquita feliz' })).toBeInTheDocument()
+      expect(document.querySelector('.cow-victory-sparkles')).toBeInTheDocument()
       expect(screen.getByText('MANGO')).toBeInTheDocument()
       expect(screen.getByText('2 intentos')).toBeInTheDocument()
       expect(screen.getByLabelText('2 de 10 intentos usados')).toBeInTheDocument()
@@ -155,6 +156,7 @@ describe('App', () => {
 
     expect(screen.getByRole('dialog', { name: 'La palabra era' })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'Vaquita frustrada' })).toBeInTheDocument()
+    expect(document.querySelector('.cow-victory-sparkles')).not.toBeInTheDocument()
     expect(screen.getByText('MANGO')).toBeInTheDocument()
     expect(screen.getByText('10 intentos')).toBeInTheDocument()
   })

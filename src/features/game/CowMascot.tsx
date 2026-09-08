@@ -47,6 +47,7 @@ export default function CowMascot({ mood }: CowMascotProps) {
 
   return (
     <div className="cow-mascot" data-mood={mood} role="img" aria-label={MOOD_LABELS[mood]}>
+      {mood === 'victory' ? <VictorySparkles /> : null}
       <span className="cow-mascot-body" aria-hidden="true" />
       <svg
         className="cow-mascot-eyes"
@@ -98,6 +99,23 @@ export default function CowMascot({ mood }: CowMascotProps) {
         )}
       </svg>
     </div>
+  )
+}
+
+function VictorySparkles() {
+  return (
+    <svg
+      className="cow-victory-sparkles"
+      viewBox="0 0 527.149119 409.149623"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <g transform="translate(-26 0)">
+        <path d="M34 82 C37 103 45 112 66 116 C45 120 36 130 32 151 C29 130 21 121 1 117 C21 112 30 103 34 82 Z" />
+      </g>
+      <path d="M469 45 C471 60 478 67 493 70 C477 74 471 81 468 97 C465 81 459 74 444 71 C459 67 466 60 469 45 Z" />
+      <path d="M492 246 C494 258 500 264 512 267 C499 270 493 277 491 290 C488 277 483 271 471 268 C483 264 489 258 492 246 Z" />
+    </svg>
   )
 }
 

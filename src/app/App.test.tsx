@@ -80,6 +80,53 @@ describe('App', () => {
     }
   })
 
+  it('copia el resultado diario sin revelar la palabra', async () => {
+    vi.useFakeTimers()
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    const clipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, 'clipboard')
+    const shareDescriptor = Object.getOwnPropertyDescriptor(navigator, 'share')
+
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    })
+    Object.defineProperty(navigator, 'share', {
+      configurable: true,
+      value: undefined,
+    })
+
+    try {
+      renderPrototype()
+      submit('mango')
+      act(() => vi.advanceTimersByTime(1100))
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Compartir' }))
+        await Promise.resolve()
+      })
+
+      expect(writeText).toHaveBeenCalledWith(
+        ['ENTRELE · 01.01 · 1/10', '◆', '●○○○○○○○○○'].join('\n'),
+      )
+      expect(writeText.mock.calls[0]?.[0]).not.toMatch(/mango/iu)
+      expect(screen.getByText('Resultado copiado.')).toBeInTheDocument()
+    } finally {
+      if (clipboardDescriptor) {
+        Object.defineProperty(navigator, 'clipboard', clipboardDescriptor)
+      } else {
+        Reflect.deleteProperty(navigator, 'clipboard')
+      }
+
+      if (shareDescriptor) {
+        Object.defineProperty(navigator, 'share', shareDescriptor)
+      } else {
+        Reflect.deleteProperty(navigator, 'share')
+      }
+
+      vi.useRealTimers()
+    }
+  })
+
   it('registra una victoria diaria una sola vez y la conserva al recargar', () => {
     vi.useFakeTimers()
 
@@ -187,6 +234,7 @@ describe('App', () => {
       act(() => vi.advanceTimersByTime(1100))
 
       expect(screen.getByRole('dialog', { name: 'Ganaste' })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Compartir' })).not.toBeInTheDocument()
       fireEvent.click(screen.getByRole('button', { name: 'Otra palabra' }))
       expect(screen.queryByRole('dialog', { name: 'Ganaste' })).not.toBeInTheDocument()
       expect(screen.getByLabelText('0 de 10 intentos usados')).toBeInTheDocument()

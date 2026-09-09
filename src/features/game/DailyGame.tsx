@@ -402,6 +402,16 @@ export default function DailyGame({ now, trainingRng, themeControl }: DailyGameP
           attemptsUsed={attemptsUsed}
           onClose={() => setResultOpen(false)}
           onNextRound={mode === 'practice' ? startNextPracticeRound : undefined}
+          shareResult={
+            mode === 'daily'
+              ? {
+                  dateKey: dailyRound.dateKey,
+                  status: game.status,
+                  relations: game.guesses.map((guess) => guess.relation),
+                  maxAttempts: game.maxAttempts,
+                }
+              : undefined
+          }
         />
       )}
     </form>

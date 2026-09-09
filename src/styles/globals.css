@@ -390,6 +390,19 @@ summary {
   transform: translateY(1px);
 }
 
+.dialog-action:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.share-status {
+  margin: 0.55rem 0 0;
+  color: var(--color-quiet);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+}
+
 .tool-button:hover,
 .dialog-close:hover {
   border-color: var(--color-key-border);

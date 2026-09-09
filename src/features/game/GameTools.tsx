@@ -10,19 +10,23 @@ import HelpDemo from './HelpDemo'
 type OpenPanel = 'help' | 'stats' | null
 
 type GameToolsProps = Readonly<{
+  mode: 'daily' | 'practice'
   status: GameStatus
   attemptsUsed: number
   maxAttempts: number
   candidateCount: number
   themeControl: ReactNode
+  onStartPractice: () => void
 }>
 
 export default function GameTools({
+  mode,
   status,
   attemptsUsed,
   maxAttempts,
   candidateCount,
   themeControl,
+  onStartPractice,
 }: GameToolsProps) {
   const [openPanel, setOpenPanel] = useState<OpenPanel>(null)
 
@@ -41,7 +45,7 @@ export default function GameTools({
         <button
           className="tool-button"
           type="button"
-          aria-label="Estadísticas de hoy"
+          aria-label={mode === 'daily' ? 'Estadísticas de hoy' : 'Estado de la práctica'}
           onClick={() => setOpenPanel('stats')}
         >
           <ChartBar size={22} weight="regular" aria-hidden="true" />
@@ -64,9 +68,27 @@ export default function GameTools({
             Cada intento ajusta el intervalo. Mientras menor sea el porcentaje, más cerca estás.
           </li>
         </ol>
+        {mode === 'daily' ? (
+          <div className="dialog-actions">
+            <button
+              className="dialog-action"
+              type="button"
+              onClick={() => {
+                setOpenPanel(null)
+                onStartPractice()
+              }}
+            >
+              Practicar
+            </button>
+          </div>
+        ) : null}
       </AppDialog>
 
-      <AppDialog open={openPanel === 'stats'} title="Hoy" onClose={() => setOpenPanel(null)}>
+      <AppDialog
+        open={openPanel === 'stats'}
+        title={mode === 'daily' ? 'Hoy' : 'Práctica'}
+        onClose={() => setOpenPanel(null)}
+      >
         <p className="session-status">{getStatusLabel(status)}</p>
         <dl className="session-stats">
           <div aria-label={`Intentos usados: ${attemptsUsed}`}>

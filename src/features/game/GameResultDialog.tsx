@@ -8,6 +8,7 @@ type GameResultDialogProps = Readonly<{
   answer: string
   attemptsUsed: number
   onClose: () => void
+  onNextRound?: () => void
 }>
 
 export default function GameResultDialog({
@@ -16,6 +17,7 @@ export default function GameResultDialog({
   answer,
   attemptsUsed,
   onClose,
+  onNextRound,
 }: GameResultDialogProps) {
   return (
     <AppDialog
@@ -28,6 +30,13 @@ export default function GameResultDialog({
       <p className="result-attempts">
         {attemptsUsed} {attemptsUsed === 1 ? 'intento' : 'intentos'}
       </p>
+      {onNextRound ? (
+        <div className="dialog-actions">
+          <button className="dialog-action" type="button" onClick={onNextRound}>
+            Otra palabra
+          </button>
+        </div>
+      ) : null}
     </AppDialog>
   )
 }

@@ -4,6 +4,8 @@ import { DAILY_TIME_ZONE, DEFAULT_MAX_ATTEMPTS, WORD_LENGTH } from './constants'
 import { selectDailyAnswer } from './daily'
 import { createDictionary, getDictionaryEntry } from './dictionary'
 import { createGame } from './engine'
+import { selectTrainingAnswer } from './training'
+import type { RNG } from './training'
 import type { DictionaryEntry, GameState } from './types'
 
 const EPOCH_DATE = '2026-01-01'
@@ -18,6 +20,11 @@ export const SENSITIVE_ANSWERS = Object.freeze(
 )
 export const RARE_SENSITIVE_ANSWERS = Object.freeze(
   dictionaryData.answers.rareSensitive.map((key) => requireEntry(key)),
+)
+export const TRAINING_ANSWERS = Object.freeze(
+  ['maria', 'papas', 'linda', 'sexto', 'dados', 'kilos', 'fruta', 'jerga', 'fideo', 'palta'].map(
+    (key) => requireEntry(key),
+  ),
 )
 
 export type GameSession = Readonly<{
@@ -48,6 +55,19 @@ export function createGameSession(now: Date = new Date()): GameSession {
       maxAttempts: DEFAULT_MAX_ATTEMPTS,
     }),
   }
+}
+
+export function createTrainingGame(
+  previousAnswerInputKey: string | null,
+  rng: RNG = Math.random,
+): GameState {
+  const answer = selectTrainingAnswer(TRAINING_ANSWERS, previousAnswerInputKey, rng)
+
+  return createGame({
+    dictionary: GAME_DICTIONARY,
+    answer: answer.inputKey,
+    maxAttempts: DEFAULT_MAX_ATTEMPTS,
+  })
 }
 
 function requireEntry(inputKey: string): DictionaryEntry {

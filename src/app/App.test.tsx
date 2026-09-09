@@ -115,6 +115,63 @@ describe('App', () => {
     expect(screen.getByLabelText('Palabra de cinco letras')).toHaveValue('ma')
   })
 
+  it('cambia automáticamente a la partida del día siguiente', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-01-02T02:59:30Z'))
+
+    try {
+      render(<App />)
+      submit('radio')
+
+      expect(screen.getByLabelText('1 de 10 intentos usados')).toBeInTheDocument()
+
+      act(() => vi.advanceTimersByTime(60_000))
+
+      expect(screen.getByLabelText('0 de 10 intentos usados')).toBeInTheDocument()
+      expect(screen.getByLabelText('Límite inferior: AAAAA')).toBeInTheDocument()
+      expect(screen.getByLabelText('Límite superior: ZZZZZ')).toBeInTheDocument()
+      expect(screen.getByLabelText('Palabra de cinco letras')).toHaveValue('')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('permite practicar sin alterar la partida diaria', () => {
+    vi.useFakeTimers()
+
+    try {
+      render(<App now={prototypeDate} trainingRng={() => 0} />)
+      submit('radio')
+      fireEvent.change(screen.getByLabelText('Palabra de cinco letras'), {
+        target: { value: 'ma' },
+      })
+
+      fireEvent.click(screen.getByRole('button', { name: 'Cómo jugar' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Practicar' }))
+
+      expect(screen.queryByRole('dialog', { name: 'Cómo jugar' })).not.toBeInTheDocument()
+      expect(screen.getByLabelText('Modo práctica')).toBeInTheDocument()
+      expect(screen.getByLabelText('0 de 10 intentos usados')).toBeInTheDocument()
+
+      submit('maria')
+      act(() => vi.advanceTimersByTime(1100))
+
+      expect(screen.getByRole('dialog', { name: 'Ganaste' })).toBeInTheDocument()
+      fireEvent.click(screen.getByRole('button', { name: 'Otra palabra' }))
+      expect(screen.queryByRole('dialog', { name: 'Ganaste' })).not.toBeInTheDocument()
+      expect(screen.getByLabelText('0 de 10 intentos usados')).toBeInTheDocument()
+
+      fireEvent.click(screen.getByRole('button', { name: 'Volver a diaria' }))
+
+      expect(screen.queryByLabelText('Modo práctica')).not.toBeInTheDocument()
+      expect(screen.getByLabelText('1 de 10 intentos usados')).toBeInTheDocument()
+      expect(screen.getByLabelText('Límite superior: RADIO')).toBeInTheDocument()
+      expect(screen.getByLabelText('Palabra de cinco letras')).toHaveValue('ma')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('muestra una sola vez el personaje de papas tras un intento a menos del uno por ciento', () => {
     vi.useFakeTimers()
 

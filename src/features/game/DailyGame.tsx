@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 
 import { submitGuess } from '../../game/engine'
-import { createGameSession } from '../../game/game-data'
+import { createGameSession, createTrainingGame } from '../../game/game-data'
 import {
   getAllowedNextLetters,
   getAttemptsUsed,
@@ -10,7 +10,9 @@ import {
   getRemainingRange,
   isInputPrefixWithinRange,
 } from '../../game/selectors'
+import type { RNG } from '../../game/training'
 import type {
+  GameState,
   GuessRejectionReason,
   GuessRelation,
   RangeBound,
@@ -24,8 +26,18 @@ import GameTools from './GameTools'
 
 type DailyGameProps = Readonly<{
   now?: Date
+  trainingRng?: RNG
   themeControl: ReactNode
 }>
+
+type GameMode = 'daily' | 'practice'
+
+type RoundState = Readonly<{
+  game: GameState
+  input: string
+}>
+
+type DailyRoundState = RoundState & Readonly<{ dateKey: string }>
 
 const KEYBOARD_ROWS = [
   ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
@@ -47,22 +59,30 @@ const CORRECT_RESULT_DELAY_MS = 1050
 const CLOSE_GUESS_CAMEO_THRESHOLD_PERCENT = 1
 const FRIES_CAMEO_DURATION_MS = 1200
 const FRIES_EASTER_EGG_WORD = 'papas'
+const DAILY_ROLLOVER_CHECK_MS = 60_000
 
-export default function DailyGame({ now = new Date(), themeControl }: DailyGameProps) {
-  const [initialGame] = useState(() => {
-    const session = createGameSession(now)
-    return { session, restored: loadDailyGame(session) }
+export default function DailyGame({ now, trainingRng, themeControl }: DailyGameProps) {
+  const [dailyRound, setDailyRound] = useState<DailyRoundState>(() => {
+    const session = createGameSession(now ?? new Date())
+    const restored = loadDailyGame(session)
+
+    return { dateKey: session.dateKey, game: restored.game, input: restored.draft }
   })
-  const { session, restored } = initialGame
-  const [game, setGame] = useState(restored.game)
-  const [input, setInput] = useState(restored.draft)
+  const [practiceRound, setPracticeRound] = useState<RoundState | null>(null)
+  const [mode, setMode] = useState<GameMode>('daily')
   const [notice, setNotice] = useState('')
-  const [resultOpen, setResultOpen] = useState(restored.game.status !== 'playing')
+  const [resultOpen, setResultOpen] = useState(dailyRound.game.status !== 'playing')
   const [showFriesCameo, setShowFriesCameo] = useState(false)
   const [rejectionSequence, setRejectionSequence] = useState(0)
   const resultDelayRef = useRef<number | undefined>(undefined)
   const friesCameoDelayRef = useRef<number | undefined>(undefined)
-  const hasShownFriesCameoRef = useRef(false)
+  const dailyDateKeyRef = useRef(dailyRound.dateKey)
+  const hasShownDailyFriesCameoRef = useRef(false)
+  const hasShownPracticeFriesCameoRef = useRef(false)
+  const activeRound = mode === 'practice' && practiceRound ? practiceRound : dailyRound
+  const { game, input } = activeRound
+  const hasShownFriesCameoRef =
+    mode === 'daily' ? hasShownDailyFriesCameoRef : hasShownPracticeFriesCameoRef
   const range = getRemainingRange(game)
   const proximity = getRangeProximity(game)
   const attemptsUsed = getAttemptsUsed(game)
@@ -85,11 +105,64 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
     [],
   )
 
+  useEffect(() => {
+    if (now) return
+
+    function checkForNewDay() {
+      const session = createGameSession(new Date())
+      if (session.dateKey === dailyDateKeyRef.current) return
+
+      const restored = loadDailyGame(session)
+      dailyDateKeyRef.current = session.dateKey
+      hasShownDailyFriesCameoRef.current = false
+      setDailyRound({
+        dateKey: session.dateKey,
+        game: restored.game,
+        input: restored.draft,
+      })
+
+      if (mode === 'daily') {
+        if (resultDelayRef.current !== undefined) {
+          window.clearTimeout(resultDelayRef.current)
+          resultDelayRef.current = undefined
+        }
+        if (friesCameoDelayRef.current !== undefined) {
+          window.clearTimeout(friesCameoDelayRef.current)
+          friesCameoDelayRef.current = undefined
+        }
+        setNotice('')
+        setResultOpen(restored.game.status !== 'playing')
+        setShowFriesCameo(false)
+        setRejectionSequence(0)
+      }
+    }
+
+    const intervalId = window.setInterval(checkForNewDay, DAILY_ROLLOVER_CHECK_MS)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') checkForNewDay()
+    }
+
+    window.addEventListener('focus', checkForNewDay)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      window.clearInterval(intervalId)
+      window.removeEventListener('focus', checkForNewDay)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [mode, now])
+
   function updateInput(value: string) {
     const nextInput = [...value].slice(0, game.dictionary.wordLength).join('')
-    setInput(nextInput)
     setNotice('')
-    saveDailyGame({ dateKey: session.dateKey, game, draft: nextInput })
+
+    if (mode === 'daily') {
+      setDailyRound({ ...dailyRound, input: nextInput })
+      saveDailyGame({ dateKey: dailyRound.dateKey, game, draft: nextInput })
+      return
+    }
+
+    setPracticeRound({ game, input: nextInput })
   }
 
   function appendLetter(letter: string) {
@@ -125,10 +198,22 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
       submission.state.status === 'playing' && (isFriesEasterEgg || isCloseGuessCameo)
     const nextInput = didWin ? input : ''
 
-    setGame(submission.state)
-    setInput(nextInput)
     setNotice(getAcceptedNotice(submission))
-    saveDailyGame({ dateKey: session.dateKey, game: submission.state, draft: nextInput })
+
+    if (mode === 'daily') {
+      setDailyRound({
+        dateKey: dailyRound.dateKey,
+        game: submission.state,
+        input: nextInput,
+      })
+      saveDailyGame({
+        dateKey: dailyRound.dateKey,
+        game: submission.state,
+        draft: nextInput,
+      })
+    } else {
+      setPracticeRound({ game: submission.state, input: nextInput })
+    }
 
     if (shouldShowFriesCameo) {
       if (isCloseGuessCameo) hasShownFriesCameoRef.current = true
@@ -150,8 +235,56 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
     setResultOpen(submission.state.status !== 'playing')
   }
 
+  function startPractice() {
+    if (!practiceRound) {
+      setPracticeRound({ game: createTrainingGame(null, trainingRng), input: '' })
+    }
+
+    setMode('practice')
+    resetTransientFeedback(false)
+  }
+
+  function startNextPracticeRound() {
+    const previousAnswerInputKey = practiceRound?.game.answer.inputKey ?? null
+    setPracticeRound({
+      game: createTrainingGame(previousAnswerInputKey, trainingRng),
+      input: '',
+    })
+    hasShownPracticeFriesCameoRef.current = false
+    resetTransientFeedback(false)
+  }
+
+  function returnToDailyGame() {
+    setMode('daily')
+    resetTransientFeedback(dailyRound.game.status !== 'playing')
+  }
+
+  function resetTransientFeedback(openResult: boolean) {
+    if (resultDelayRef.current !== undefined) {
+      window.clearTimeout(resultDelayRef.current)
+      resultDelayRef.current = undefined
+    }
+    if (friesCameoDelayRef.current !== undefined) {
+      window.clearTimeout(friesCameoDelayRef.current)
+      friesCameoDelayRef.current = undefined
+    }
+
+    setNotice('')
+    setResultOpen(openResult)
+    setShowFriesCameo(false)
+    setRejectionSequence(0)
+  }
+
   return (
     <form className="game-form" onSubmit={handleSubmit}>
+      {mode === 'practice' ? (
+        <div className="practice-mode" aria-label="Modo práctica">
+          <span>Práctica</span>
+          <button className="practice-exit" type="button" onClick={returnToDailyGame}>
+            Volver a diaria
+          </button>
+        </div>
+      ) : null}
       <AttemptDots used={attemptsUsed} total={game.maxAttempts} />
 
       <section className="playfield" aria-label="Intervalo actual">
@@ -190,11 +323,13 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
         </div>
 
         <GameTools
+          mode={mode}
           status={game.status}
           attemptsUsed={attemptsUsed}
           maxAttempts={game.maxAttempts}
           candidateCount={range.candidateCount}
           themeControl={themeControl}
+          onStartPractice={startPractice}
         />
       </section>
 
@@ -223,6 +358,7 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
           answer={game.answer.display}
           attemptsUsed={attemptsUsed}
           onClose={() => setResultOpen(false)}
+          onNextRound={mode === 'practice' ? startNextPracticeRound : undefined}
         />
       )}
     </form>

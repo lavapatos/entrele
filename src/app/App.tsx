@@ -1,12 +1,14 @@
 import DailyGame from '../features/game/DailyGame'
+import type { RNG } from '../game/training'
 import ThemeSettings from '../features/theme/ThemeSettings'
 import { useTheme } from '../theme/useTheme'
 
 type AppProps = Readonly<{
   now?: Date
+  trainingRng?: RNG
 }>
 
-export default function App({ now }: AppProps) {
+export default function App({ now, trainingRng }: AppProps) {
   const { palette, setPalette, modePreference, setModePreference } = useTheme()
 
   return (
@@ -18,6 +20,7 @@ export default function App({ now }: AppProps) {
 
         <DailyGame
           now={now}
+          trainingRng={trainingRng}
           themeControl={
             <ThemeSettings
               palette={palette}

@@ -28,6 +28,9 @@ export function useTheme() {
   useEffect(() => {
     document.documentElement.dataset.palette = palette
     document.documentElement.dataset.mode = resolvedMode
+    document
+      .querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+      ?.setAttribute('content', getThemeColor(palette, resolvedMode))
     writePreference(PALETTE_STORAGE_KEY, palette)
     writePreference(MODE_STORAGE_KEY, modePreference)
   }, [modePreference, palette, resolvedMode])
@@ -54,6 +57,11 @@ function readMode(): ThemeModePreference {
 function getSystemMode(): ResolvedThemeMode {
   if (typeof window.matchMedia !== 'function') return 'light'
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
+function getThemeColor(palette: ThemePalette, mode: ResolvedThemeMode): string {
+  if (mode === 'dark') return palette === 'b' ? '#211d1d' : '#161c1f'
+  return palette === 'b' ? '#fbf1f3' : '#fbfaf6'
 }
 
 function readPreference(key: string): string | null {

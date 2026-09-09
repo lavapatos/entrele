@@ -339,6 +339,9 @@ describe('App', () => {
   })
 
   it('permite cambiar y conservar la paleta y el modo', () => {
+    const themeColor = document.createElement('meta')
+    themeColor.name = 'theme-color'
+    document.head.append(themeColor)
     renderPrototype()
 
     fireEvent.click(screen.getByRole('button', { name: 'Cambiar tema' }))
@@ -350,6 +353,8 @@ describe('App', () => {
     expect(document.documentElement.dataset.mode).toBe('dark')
     expect(window.localStorage.getItem('entrele:palette')).toBe('b')
     expect(window.localStorage.getItem('entrele:mode')).toBe('dark')
+    expect(themeColor).toHaveAttribute('content', '#211d1d')
+    themeColor.remove()
   })
 
   it('abre la ayuda y muestra estadísticas históricas', () => {

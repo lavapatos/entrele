@@ -10,6 +10,7 @@ import {
   getRemainingRange,
   isInputPrefixWithinRange,
 } from '../../game/selectors'
+import { expireStreak, recordDailyResult } from '../../game/stats'
 import type { RNG } from '../../game/training'
 import type {
   GameState,
@@ -19,6 +20,7 @@ import type {
   SubmitGuessResult,
 } from '../../game/types'
 import { loadDailyGame, saveDailyGame } from '../../storage/game-storage'
+import { loadStats, saveStats } from '../../storage/stats-storage'
 import { formatDistancePercentage, getDistanceMarkerPosition } from './distance-display'
 import FriesMascot from './FriesMascot'
 import GameResultDialog from './GameResultDialog'
@@ -70,6 +72,19 @@ export default function DailyGame({ now, trainingRng, themeControl }: DailyGameP
   })
   const [practiceRound, setPracticeRound] = useState<RoundState | null>(null)
   const [mode, setMode] = useState<GameMode>('daily')
+  const [stats, setStats] = useState(() => {
+    const loaded = expireStreak(loadStats(), dailyRound.dateKey)
+
+    if (dailyRound.game.status === 'playing') return loaded
+
+    const reconciled = recordDailyResult(loaded, {
+      dateKey: dailyRound.dateKey,
+      status: dailyRound.game.status,
+      attemptsUsed: getAttemptsUsed(dailyRound.game),
+    })
+    if (reconciled !== loaded) saveStats(reconciled)
+    return reconciled
+  })
   const [notice, setNotice] = useState('')
   const [resultOpen, setResultOpen] = useState(dailyRound.game.status !== 'playing')
   const [showFriesCameo, setShowFriesCameo] = useState(false)
@@ -77,6 +92,7 @@ export default function DailyGame({ now, trainingRng, themeControl }: DailyGameP
   const resultDelayRef = useRef<number | undefined>(undefined)
   const friesCameoDelayRef = useRef<number | undefined>(undefined)
   const dailyDateKeyRef = useRef(dailyRound.dateKey)
+  const statsRef = useRef(stats)
   const hasShownDailyFriesCameoRef = useRef(false)
   const hasShownPracticeFriesCameoRef = useRef(false)
   const activeRound = mode === 'practice' && practiceRound ? practiceRound : dailyRound
@@ -113,6 +129,22 @@ export default function DailyGame({ now, trainingRng, themeControl }: DailyGameP
       if (session.dateKey === dailyDateKeyRef.current) return
 
       const restored = loadDailyGame(session)
+      let nextStats = expireStreak(statsRef.current, session.dateKey)
+
+      if (restored.game.status !== 'playing') {
+        nextStats = recordDailyResult(nextStats, {
+          dateKey: session.dateKey,
+          status: restored.game.status,
+          attemptsUsed: getAttemptsUsed(restored.game),
+        })
+      }
+
+      if (nextStats !== statsRef.current) {
+        statsRef.current = nextStats
+        setStats(nextStats)
+        saveStats(nextStats)
+      }
+
       dailyDateKeyRef.current = session.dateKey
       hasShownDailyFriesCameoRef.current = false
       setDailyRound({
@@ -211,6 +243,20 @@ export default function DailyGame({ now, trainingRng, themeControl }: DailyGameP
         game: submission.state,
         draft: nextInput,
       })
+
+      if (submission.state.status !== 'playing') {
+        const nextStats = recordDailyResult(statsRef.current, {
+          dateKey: dailyRound.dateKey,
+          status: submission.state.status,
+          attemptsUsed: getAttemptsUsed(submission.state),
+        })
+
+        if (nextStats !== statsRef.current) {
+          statsRef.current = nextStats
+          setStats(nextStats)
+          saveStats(nextStats)
+        }
+      }
     } else {
       setPracticeRound({ game: submission.state, input: nextInput })
     }
@@ -324,10 +370,7 @@ export default function DailyGame({ now, trainingRng, themeControl }: DailyGameP
 
         <GameTools
           mode={mode}
-          status={game.status}
-          attemptsUsed={attemptsUsed}
-          maxAttempts={game.maxAttempts}
-          candidateCount={range.candidateCount}
+          stats={stats}
           themeControl={themeControl}
           onStartPractice={startPractice}
         />

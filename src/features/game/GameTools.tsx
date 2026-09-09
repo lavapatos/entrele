@@ -3,7 +3,8 @@ import { useState } from 'react'
 import type { ReactNode } from 'react'
 
 import AppDialog from '../../components/AppDialog'
-import type { GameStatus } from '../../game/types'
+import { getWinRate } from '../../game/stats'
+import type { GameStats } from '../../game/stats'
 import CowMascot from './CowMascot'
 import HelpDemo from './HelpDemo'
 
@@ -11,23 +12,12 @@ type OpenPanel = 'help' | 'stats' | null
 
 type GameToolsProps = Readonly<{
   mode: 'daily' | 'practice'
-  status: GameStatus
-  attemptsUsed: number
-  maxAttempts: number
-  candidateCount: number
+  stats: GameStats
   themeControl: ReactNode
   onStartPractice: () => void
 }>
 
-export default function GameTools({
-  mode,
-  status,
-  attemptsUsed,
-  maxAttempts,
-  candidateCount,
-  themeControl,
-  onStartPractice,
-}: GameToolsProps) {
+export default function GameTools({ mode, stats, themeControl, onStartPractice }: GameToolsProps) {
   const [openPanel, setOpenPanel] = useState<OpenPanel>(null)
 
   return (
@@ -45,7 +35,7 @@ export default function GameTools({
         <button
           className="tool-button"
           type="button"
-          aria-label={mode === 'daily' ? 'Estadísticas de hoy' : 'Estado de la práctica'}
+          aria-label="Estadísticas"
           onClick={() => setOpenPanel('stats')}
         >
           <ChartBar size={22} weight="regular" aria-hidden="true" />
@@ -86,31 +76,60 @@ export default function GameTools({
 
       <AppDialog
         open={openPanel === 'stats'}
-        title={mode === 'daily' ? 'Hoy' : 'Práctica'}
+        title="Estadísticas"
         onClose={() => setOpenPanel(null)}
       >
-        <p className="session-status">{getStatusLabel(status)}</p>
-        <dl className="session-stats">
-          <div aria-label={`Intentos usados: ${attemptsUsed}`}>
-            <dt>Usados</dt>
-            <dd>{attemptsUsed}</dd>
-          </div>
-          <div aria-label={`Intentos disponibles: ${maxAttempts - attemptsUsed}`}>
-            <dt>Disponibles</dt>
-            <dd>{maxAttempts - attemptsUsed}</dd>
-          </div>
-          <div aria-label={`Palabras candidatas: ${candidateCount}`}>
-            <dt>Candidatas</dt>
-            <dd>{candidateCount}</dd>
-          </div>
-        </dl>
+        <StatsSummary stats={stats} />
       </AppDialog>
     </>
   )
 }
 
-function getStatusLabel(status: GameStatus): string {
-  if (status === 'won') return 'Ganaste'
-  if (status === 'lost') return 'Terminó'
-  return 'En juego'
+function StatsSummary({ stats }: Readonly<{ stats: GameStats }>) {
+  const summary = [
+    ['Jugadas', stats.played],
+    ['Ganadas', stats.wins],
+    ['Acierto', `${getWinRate(stats)}%`],
+    ['Racha', stats.currentStreak],
+    ['Mejor', stats.bestStreak],
+  ] as const
+  const largestBucket = Math.max(1, ...stats.attemptDistribution)
+  const distributionLabel = stats.attemptDistribution
+    .map((count, index) => `${index + 1} intentos: ${count}`)
+    .join(', ')
+
+  return (
+    <>
+      <dl className="historical-stats">
+        {summary.map(([label, value]) => (
+          <div key={label} aria-label={`${label}: ${value}`}>
+            <dt>{label}</dt>
+            <dd>{value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      <section className="attempt-distribution" aria-labelledby="attempt-distribution-title">
+        <h3 id="attempt-distribution-title">Intentos</h3>
+        <div
+          className="attempt-distribution-plot"
+          role="img"
+          aria-label={`Distribución de victorias por intentos. ${distributionLabel}`}
+        >
+          {stats.attemptDistribution.map((count, index) => (
+            <div className="attempt-distribution-row" key={index} aria-hidden="true">
+              <span>{index + 1}</span>
+              <span className="attempt-distribution-space">
+                <span
+                  className="attempt-distribution-bar"
+                  style={{ width: `${(count / largestBucket) * 100}%` }}
+                />
+              </span>
+              <span>{count}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+    </>
+  )
 }

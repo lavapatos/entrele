@@ -80,6 +80,36 @@ describe('App', () => {
     }
   })
 
+  it('registra una victoria diaria una sola vez y la conserva al recargar', () => {
+    vi.useFakeTimers()
+
+    try {
+      const firstRender = renderPrototype()
+
+      submit('mango')
+      act(() => vi.advanceTimersByTime(1100))
+      fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Estadísticas' }))
+
+      expect(screen.getByRole('dialog', { name: 'Estadísticas' })).toBeInTheDocument()
+      expect(screen.getByLabelText('Jugadas: 1')).toBeInTheDocument()
+      expect(screen.getByLabelText('Ganadas: 1')).toBeInTheDocument()
+      expect(screen.getByLabelText('Acierto: 100%')).toBeInTheDocument()
+      expect(screen.getByLabelText('Racha: 1')).toBeInTheDocument()
+      expect(screen.getByLabelText('Mejor: 1')).toBeInTheDocument()
+      firstRender.unmount()
+
+      renderPrototype()
+      fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Estadísticas' }))
+
+      expect(screen.getByLabelText('Jugadas: 1')).toBeInTheDocument()
+      expect(screen.getByLabelText('Ganadas: 1')).toBeInTheDocument()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('advierte una palabra fuera del intervalo y no gasta otro intento', () => {
     renderPrototype()
 
@@ -167,6 +197,9 @@ describe('App', () => {
       expect(screen.getByLabelText('1 de 10 intentos usados')).toBeInTheDocument()
       expect(screen.getByLabelText('Límite superior: RADIO')).toBeInTheDocument()
       expect(screen.getByLabelText('Palabra de cinco letras')).toHaveValue('ma')
+
+      fireEvent.click(screen.getByRole('button', { name: 'Estadísticas' }))
+      expect(screen.getByLabelText('Jugadas: 0')).toBeInTheDocument()
     } finally {
       vi.useRealTimers()
     }
@@ -271,7 +304,7 @@ describe('App', () => {
     expect(window.localStorage.getItem('entrele:mode')).toBe('dark')
   })
 
-  it('abre la ayuda y muestra estadísticas reales de la partida actual', () => {
+  it('abre la ayuda y muestra estadísticas históricas', () => {
     renderPrototype()
 
     fireEvent.click(screen.getByRole('button', { name: 'Cómo jugar' }))
@@ -289,10 +322,11 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
 
     submit('radio')
-    fireEvent.click(screen.getByRole('button', { name: 'Estadísticas de hoy' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Estadísticas' }))
 
-    expect(screen.getByRole('dialog', { name: 'Hoy' })).toBeInTheDocument()
-    expect(screen.getByLabelText('Intentos usados: 1')).toBeInTheDocument()
-    expect(screen.getByLabelText('Intentos disponibles: 9')).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Estadísticas' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Jugadas: 0')).toBeInTheDocument()
+    expect(screen.getByLabelText('Ganadas: 0')).toBeInTheDocument()
+    expect(screen.getByLabelText(/Distribución de victorias por intentos/)).toBeInTheDocument()
   })
 })

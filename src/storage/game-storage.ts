@@ -3,11 +3,11 @@ import { DICTIONARY_VERSION } from '../game/game-data'
 import { countLetters, normalizeInput } from '../game/normalize'
 import type { GameSession } from '../game/game-data'
 import type { GameState } from '../game/types'
+import { getBrowserStorage } from './browser-storage'
+import type { StorageAdapter } from './browser-storage'
 import { DAILY_GAME_STORAGE_VERSION, migrateDailyGame, type StoredDailyGame } from './migrations'
 
 export const DAILY_GAME_STORAGE_KEY = 'entrele:daily-game:v1'
-
-type StorageAdapter = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
 
 export type RestoredDailyGame = Readonly<{
   game: GameState
@@ -94,14 +94,4 @@ function isValidDraft(draft: string, wordLength: number): boolean {
 
   const normalized = normalizeInput(draft)
   return normalized.ok && countLetters(normalized.inputKey) <= wordLength
-}
-
-function getBrowserStorage(): StorageAdapter | null {
-  if (typeof window === 'undefined') return null
-
-  try {
-    return window.localStorage
-  } catch {
-    return null
-  }
 }

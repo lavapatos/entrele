@@ -16,7 +16,7 @@ describe('App', () => {
   })
 
   function renderPrototype() {
-    render(<App now={prototypeDate} />)
+    return render(<App now={prototypeDate} />)
   }
 
   function submit(word: string) {
@@ -97,6 +97,22 @@ describe('App', () => {
     expect(document.querySelector('.guess-row')).toHaveClass('guess-row-rejected')
     expect(screen.getByRole('status')).toHaveTextContent('Palabra fuera de rango')
     expect(screen.getByLabelText('1 de 10 intentos usados')).toBeInTheDocument()
+  })
+
+  it('reanuda la partida y el borrador al recargar el mismo día', () => {
+    const firstRender = renderPrototype()
+
+    submit('radio')
+    fireEvent.change(screen.getByLabelText('Palabra de cinco letras'), {
+      target: { value: 'ma' },
+    })
+    firstRender.unmount()
+
+    renderPrototype()
+
+    expect(screen.getByLabelText('1 de 10 intentos usados')).toBeInTheDocument()
+    expect(screen.getByLabelText('Límite superior: RADIO')).toBeInTheDocument()
+    expect(screen.getByLabelText('Palabra de cinco letras')).toHaveValue('ma')
   })
 
   it('muestra una sola vez el personaje de papas tras un intento a menos del uno por ciento', () => {

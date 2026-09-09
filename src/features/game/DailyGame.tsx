@@ -16,6 +16,7 @@ import type {
   RangeBound,
   SubmitGuessResult,
 } from '../../game/types'
+import { loadDailyGame, saveDailyGame } from '../../storage/game-storage'
 import { formatDistancePercentage, getDistanceMarkerPosition } from './distance-display'
 import FriesMascot from './FriesMascot'
 import GameResultDialog from './GameResultDialog'
@@ -48,11 +49,15 @@ const FRIES_CAMEO_DURATION_MS = 1200
 const FRIES_EASTER_EGG_WORD = 'papas'
 
 export default function DailyGame({ now = new Date(), themeControl }: DailyGameProps) {
-  const [session] = useState(() => createGameSession(now))
-  const [game, setGame] = useState(session.game)
-  const [input, setInput] = useState('')
+  const [initialGame] = useState(() => {
+    const session = createGameSession(now)
+    return { session, restored: loadDailyGame(session) }
+  })
+  const { session, restored } = initialGame
+  const [game, setGame] = useState(restored.game)
+  const [input, setInput] = useState(restored.draft)
   const [notice, setNotice] = useState('')
-  const [resultOpen, setResultOpen] = useState(false)
+  const [resultOpen, setResultOpen] = useState(restored.game.status !== 'playing')
   const [showFriesCameo, setShowFriesCameo] = useState(false)
   const [rejectionSequence, setRejectionSequence] = useState(0)
   const resultDelayRef = useRef<number | undefined>(undefined)
@@ -81,8 +86,10 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
   )
 
   function updateInput(value: string) {
-    setInput([...value].slice(0, game.dictionary.wordLength).join(''))
+    const nextInput = [...value].slice(0, game.dictionary.wordLength).join('')
+    setInput(nextInput)
     setNotice('')
+    saveDailyGame({ dateKey: session.dateKey, game, draft: nextInput })
   }
 
   function appendLetter(letter: string) {
@@ -116,10 +123,12 @@ export default function DailyGame({ now = new Date(), themeControl }: DailyGameP
       !hasShownFriesCameoRef.current
     const shouldShowFriesCameo =
       submission.state.status === 'playing' && (isFriesEasterEgg || isCloseGuessCameo)
+    const nextInput = didWin ? input : ''
 
     setGame(submission.state)
-    setInput(didWin ? input : '')
+    setInput(nextInput)
     setNotice(getAcceptedNotice(submission))
+    saveDailyGame({ dateKey: session.dateKey, game: submission.state, draft: nextInput })
 
     if (shouldShowFriesCameo) {
       if (isCloseGuessCameo) hasShownFriesCameoRef.current = true

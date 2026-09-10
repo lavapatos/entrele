@@ -1,0 +1,13 @@
+/*
+!data
+!index.html
+!package-lock.json
+!package.json
+!public
+!scripts
+!src
+!tsconfig.app.json
+!tsconfig.json
+!tsconfig.node.json
+!vercel.json
+!vite.config.ts

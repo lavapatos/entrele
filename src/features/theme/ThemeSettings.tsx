@@ -1,4 +1,4 @@
-import { MagicWand } from '@phosphor-icons/react'
+import { MagicWand } from '@phosphor-icons/react/MagicWand'
 import { useState } from 'react'
 
 import AppDialog from '../../components/AppDialog'

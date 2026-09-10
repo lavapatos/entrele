@@ -1,4 +1,4 @@
-import { X } from '@phosphor-icons/react'
+import { X } from '@phosphor-icons/react/X'
 import { useEffect, useId, useRef } from 'react'
 import type { ReactNode } from 'react'
 

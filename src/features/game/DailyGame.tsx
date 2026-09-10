@@ -427,6 +427,7 @@ function BoundRow({
   return (
     <div
       className={`letter-row bound-row ${animate ? `bound-row-updated bound-row-${position}` : ''}`}
+      role="img"
       aria-label={`Límite ${position}: ${letters.join('')}`}
     >
       {letters.map((letter, index) => (

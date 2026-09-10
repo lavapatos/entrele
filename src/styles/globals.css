@@ -146,6 +146,7 @@ summary {
 button,
 summary {
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .sr-only {
@@ -499,6 +500,7 @@ summary {
   padding: 1.3rem;
   margin: auto;
   overflow-y: auto;
+  overscroll-behavior: contain;
   border: 1px solid var(--color-tile-border);
   border-radius: 2px;
   background: var(--color-input);

@@ -48,5 +48,14 @@ function MascotLayer({
   src: string
   className?: string
 }>) {
-  return <img className={`fries-mascot-layer ${className}`} src={src} alt="" draggable={false} />
+  return (
+    <img
+      className={`fries-mascot-layer ${className}`}
+      src={src}
+      width={FULL_CANVAS_WIDTH}
+      height={FULL_CANVAS_HEIGHT}
+      alt=""
+      draggable={false}
+    />
+  )
 }

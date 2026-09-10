@@ -40,13 +40,18 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Probar' }))
   }
 
+  function expectStat(label: string, value: string | number) {
+    const term = screen.getByText(label, { selector: 'dt' })
+    expect(term.parentElement?.querySelector('dd')).toHaveTextContent(String(value))
+  }
+
   it('muestra la partida con el rango completo y los intentos disponibles', async () => {
     await renderPrototype()
 
     expect(screen.getByRole('heading', { name: 'ENTRELE' })).toBeInTheDocument()
     expect(screen.getByLabelText('0 de 10 intentos usados')).toBeInTheDocument()
-    expect(screen.getByLabelText('Límite inferior: AAAAA')).toBeInTheDocument()
-    expect(screen.getByLabelText('Límite superior: ZZZZZ')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Límite inferior: AAAAA' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Límite superior: ZZZZZ' })).toBeInTheDocument()
     expect(screen.getByLabelText('Palabra de cinco letras')).toBeEnabled()
   })
 
@@ -111,7 +116,7 @@ describe('App', () => {
       submit('radio')
 
       expect(screen.getByLabelText('1 de 10 intentos usados')).toBeInTheDocument()
-      const updatedUpperBound = screen.getByLabelText('Límite superior: RADIO')
+      const updatedUpperBound = screen.getByRole('img', { name: 'Límite superior: RADIO' })
       expect(updatedUpperBound).toHaveClass('bound-row-updated', 'bound-row-superior')
       expect(updatedUpperBound.querySelectorAll('.bound-letter')).toHaveLength(5)
       const mango = GAME_DICTIONARY.entriesByInputKey.mango
@@ -206,19 +211,19 @@ describe('App', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Estadísticas' }))
 
       expect(screen.getByRole('dialog', { name: 'Estadísticas' })).toBeInTheDocument()
-      expect(screen.getByLabelText('Jugadas: 1')).toBeInTheDocument()
-      expect(screen.getByLabelText('Ganadas: 1')).toBeInTheDocument()
-      expect(screen.getByLabelText('Acierto: 100%')).toBeInTheDocument()
-      expect(screen.getByLabelText('Racha: 1')).toBeInTheDocument()
-      expect(screen.getByLabelText('Mejor: 1')).toBeInTheDocument()
+      expectStat('Jugadas', 1)
+      expectStat('Ganadas', 1)
+      expectStat('Acierto', '100%')
+      expectStat('Racha', 1)
+      expectStat('Mejor', 1)
       firstRender.unmount()
 
       await renderPrototype(gateway)
       fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
       fireEvent.click(screen.getByRole('button', { name: 'Estadísticas' }))
 
-      expect(screen.getByLabelText('Jugadas: 1')).toBeInTheDocument()
-      expect(screen.getByLabelText('Ganadas: 1')).toBeInTheDocument()
+      expectStat('Jugadas', 1)
+      expectStat('Ganadas', 1)
     } finally {
       vi.useRealTimers()
     }
@@ -256,7 +261,7 @@ describe('App', () => {
     await renderPrototype(gateway)
 
     expect(screen.getByLabelText('1 de 10 intentos usados')).toBeInTheDocument()
-    expect(screen.getByLabelText('Límite superior: RADIO')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Límite superior: RADIO' })).toBeInTheDocument()
     expect(screen.getByLabelText('Palabra de cinco letras')).toHaveValue('ma')
   })
 
@@ -280,8 +285,8 @@ describe('App', () => {
       })
 
       expect(screen.getByLabelText('0 de 10 intentos usados')).toBeInTheDocument()
-      expect(screen.getByLabelText('Límite inferior: AAAAA')).toBeInTheDocument()
-      expect(screen.getByLabelText('Límite superior: ZZZZZ')).toBeInTheDocument()
+      expect(screen.getByRole('img', { name: 'Límite inferior: AAAAA' })).toBeInTheDocument()
+      expect(screen.getByRole('img', { name: 'Límite superior: ZZZZZ' })).toBeInTheDocument()
       expect(screen.getByLabelText('Palabra de cinco letras')).toHaveValue('')
     } finally {
       vi.useRealTimers()
@@ -318,11 +323,11 @@ describe('App', () => {
 
       expect(screen.queryByLabelText('Modo práctica')).not.toBeInTheDocument()
       expect(screen.getByLabelText('1 de 10 intentos usados')).toBeInTheDocument()
-      expect(screen.getByLabelText('Límite superior: RADIO')).toBeInTheDocument()
+      expect(screen.getByRole('img', { name: 'Límite superior: RADIO' })).toBeInTheDocument()
       expect(screen.getByLabelText('Palabra de cinco letras')).toHaveValue('ma')
 
       fireEvent.click(screen.getByRole('button', { name: 'Estadísticas' }))
-      expect(screen.getByLabelText('Jugadas: 0')).toBeInTheDocument()
+      expectStat('Jugadas', 0)
     } finally {
       vi.useRealTimers()
     }
@@ -453,8 +458,8 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Estadísticas' }))
 
     expect(screen.getByRole('dialog', { name: 'Estadísticas' })).toBeInTheDocument()
-    expect(screen.getByLabelText('Jugadas: 0')).toBeInTheDocument()
-    expect(screen.getByLabelText('Ganadas: 0')).toBeInTheDocument()
+    expectStat('Jugadas', 0)
+    expectStat('Ganadas', 0)
     expect(screen.getByLabelText(/Distribución de victorias por intentos/)).toBeInTheDocument()
   })
 })

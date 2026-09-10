@@ -1,4 +1,6 @@
-import { ChartBar, Key, SealQuestion } from '@phosphor-icons/react'
+import { ChartBar } from '@phosphor-icons/react/ChartBar'
+import { Key } from '@phosphor-icons/react/Key'
+import { SealQuestion } from '@phosphor-icons/react/SealQuestion'
 import { useId, useState } from 'react'
 import type { ReactNode } from 'react'
 
@@ -247,7 +249,7 @@ function StatsSummary({ stats }: Readonly<{ stats: GameStats }>) {
     <>
       <dl className="historical-stats">
         {summary.map(([label, value]) => (
-          <div key={label} aria-label={`${label}: ${value}`}>
+          <div key={label}>
             <dt>{label}</dt>
             <dd>{value}</dd>
           </div>

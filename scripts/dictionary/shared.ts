@@ -19,6 +19,7 @@ export const PATHS = Object.freeze({
   rareSensitiveAnswers: new URL('data/curated/answers-sensitive-rare.txt', PROJECT_ROOT),
   inspectionSamples: new URL('data/curated/inspection-samples.json', PROJECT_ROOT),
   generatedDictionary: new URL('src/game/generated/dictionary-data.json', PROJECT_ROOT),
+  generatedPrivateDailyData: new URL('supabase/functions/_shared/daily-data.ts', PROJECT_ROOT),
   generatedReport: new URL('data/generated/dictionary-report.json', PROJECT_ROOT),
 })
 

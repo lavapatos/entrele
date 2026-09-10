@@ -11,7 +11,7 @@ export type GameStats = Readonly<{
   recordedDateKeys: readonly string[]
 }>
 
-type DailyResult = Readonly<{
+export type DailyResult = Readonly<{
   dateKey: string
   status: Exclude<GameStatus, 'playing'>
   attemptsUsed: number
@@ -27,6 +27,17 @@ export function createEmptyStats(): GameStats {
     attemptDistribution: Array.from({ length: DEFAULT_MAX_ATTEMPTS }, () => 0),
     recordedDateKeys: [],
   })
+}
+
+export function createStatsFromDailyResults(results: readonly DailyResult[]): GameStats {
+  const chronologicalResults = [...results].sort((left, right) =>
+    left.dateKey.localeCompare(right.dateKey),
+  )
+
+  return chronologicalResults.reduce(
+    (stats, result) => recordDailyResult(stats, result),
+    createEmptyStats(),
+  )
 }
 
 export function recordDailyResult(stats: GameStats, result: DailyResult): GameStats {

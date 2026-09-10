@@ -1,9 +1,10 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { formatDistancePercentage } from '../features/game/distance-display'
 import { getDistancePercent } from '../game/compare'
 import { GAME_DICTIONARY } from '../game/game-data'
+import { FakePrivateGameGateway } from '../test/fake-private-game-gateway'
 import App from './App'
 
 describe('App', () => {
@@ -15,8 +16,21 @@ describe('App', () => {
     delete document.documentElement.dataset.mode
   })
 
-  function renderPrototype() {
-    return render(<App now={prototypeDate} />)
+  async function renderPrototype(gateway = new FakePrivateGameGateway()) {
+    const rendered = render(
+      <App now={prototypeDate} privateGateway={gateway} trainingRng={() => 0} />,
+    )
+    await settlePrivateAccess()
+    return rendered
+  }
+
+  async function settlePrivateAccess() {
+    await act(async () => {
+      await Promise.resolve()
+      await Promise.resolve()
+      await Promise.resolve()
+      await Promise.resolve()
+    })
   }
 
   function submit(word: string) {
@@ -26,8 +40,8 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Probar' }))
   }
 
-  it('muestra la partida con el rango completo y los intentos disponibles', () => {
-    renderPrototype()
+  it('muestra la partida con el rango completo y los intentos disponibles', async () => {
+    await renderPrototype()
 
     expect(screen.getByRole('heading', { name: 'ENTRELE' })).toBeInTheDocument()
     expect(screen.getByLabelText('0 de 10 intentos usados')).toBeInTheDocument()
@@ -36,11 +50,63 @@ describe('App', () => {
     expect(screen.getByLabelText('Palabra de cinco letras')).toBeEnabled()
   })
 
-  it('actualiza el intervalo y permite ganar', () => {
+  it('reserva la diaria para quien inicia sesión y vuelve a práctica al salir', async () => {
+    const gateway = new FakePrivateGameGateway({ signedIn: false })
+    render(<App now={prototypeDate} privateGateway={gateway} trainingRng={() => 0} />)
+    await settlePrivateAccess()
+
+    expect(screen.getByLabelText('Modo práctica')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Entrar' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Estadísticas' })).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
+    const accessDialog = screen.getByRole('dialog', { name: 'Entrar' })
+    fireEvent.change(within(accessDialog).getByLabelText('Usuario'), {
+      target: { value: 'tester' },
+    })
+    fireEvent.change(within(accessDialog).getByLabelText('Contraseña'), {
+      target: { value: 'wrong-password' },
+    })
+    fireEvent.click(within(accessDialog).getByRole('button', { name: 'Entrar' }))
+    await settlePrivateAccess()
+
+    expect(within(accessDialog).getByRole('alert')).toHaveTextContent(
+      'Usuario o contraseña incorrectos.',
+    )
+
+    fireEvent.change(within(accessDialog).getByLabelText('Contraseña'), {
+      target: { value: 'correct-password' },
+    })
+    fireEvent.click(within(accessDialog).getByRole('button', { name: 'Entrar' }))
+    await settlePrivateAccess()
+
+    expect(screen.queryByRole('dialog', { name: 'Entrar' })).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Modo práctica')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Estadísticas' })).toBeInTheDocument()
+
+    submit('mango')
+    await settlePrivateAccess()
+    expect(gateway.savedResults).toHaveLength(1)
+    expect(gateway.savedResults[0]).toMatchObject({
+      dateKey: '2026-01-01',
+      status: 'won',
+      attemptsUsed: 1,
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Estadísticas' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
+    await settlePrivateAccess()
+
+    expect(screen.getByLabelText('Modo práctica')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Entrar' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Estadísticas' })).not.toBeInTheDocument()
+  })
+
+  it('actualiza el intervalo y permite ganar', async () => {
     vi.useFakeTimers()
 
     try {
-      renderPrototype()
+      await renderPrototype()
 
       submit('radio')
 
@@ -96,7 +162,7 @@ describe('App', () => {
     })
 
     try {
-      renderPrototype()
+      await renderPrototype()
       submit('mango')
       act(() => vi.advanceTimersByTime(1100))
 
@@ -127,11 +193,12 @@ describe('App', () => {
     }
   })
 
-  it('registra una victoria diaria una sola vez y la conserva al recargar', () => {
+  it('registra una victoria diaria una sola vez y la conserva al recargar', async () => {
     vi.useFakeTimers()
 
     try {
-      const firstRender = renderPrototype()
+      const gateway = new FakePrivateGameGateway()
+      const firstRender = await renderPrototype(gateway)
 
       submit('mango')
       act(() => vi.advanceTimersByTime(1100))
@@ -146,7 +213,7 @@ describe('App', () => {
       expect(screen.getByLabelText('Mejor: 1')).toBeInTheDocument()
       firstRender.unmount()
 
-      renderPrototype()
+      await renderPrototype(gateway)
       fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
       fireEvent.click(screen.getByRole('button', { name: 'Estadísticas' }))
 
@@ -157,8 +224,8 @@ describe('App', () => {
     }
   })
 
-  it('advierte una palabra fuera del intervalo y no gasta otro intento', () => {
-    renderPrototype()
+  it('advierte una palabra fuera del intervalo y no gasta otro intento', async () => {
+    await renderPrototype()
 
     submit('radio')
     const input = screen.getByLabelText('Palabra de cinco letras')
@@ -176,8 +243,9 @@ describe('App', () => {
     expect(screen.getByLabelText('1 de 10 intentos usados')).toBeInTheDocument()
   })
 
-  it('reanuda la partida y el borrador al recargar el mismo día', () => {
-    const firstRender = renderPrototype()
+  it('reanuda la partida y el borrador al recargar el mismo día', async () => {
+    const gateway = new FakePrivateGameGateway()
+    const firstRender = await renderPrototype(gateway)
 
     submit('radio')
     fireEvent.change(screen.getByLabelText('Palabra de cinco letras'), {
@@ -185,24 +253,31 @@ describe('App', () => {
     })
     firstRender.unmount()
 
-    renderPrototype()
+    await renderPrototype(gateway)
 
     expect(screen.getByLabelText('1 de 10 intentos usados')).toBeInTheDocument()
     expect(screen.getByLabelText('Límite superior: RADIO')).toBeInTheDocument()
     expect(screen.getByLabelText('Palabra de cinco letras')).toHaveValue('ma')
   })
 
-  it('cambia automáticamente a la partida del día siguiente', () => {
+  it('cambia automáticamente a la partida del día siguiente', async () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-01-02T02:59:30Z'))
 
     try {
-      render(<App />)
+      const gateway = new FakePrivateGameGateway()
+      render(<App privateGateway={gateway} trainingRng={() => 0} />)
+      await settlePrivateAccess()
       submit('radio')
 
       expect(screen.getByLabelText('1 de 10 intentos usados')).toBeInTheDocument()
 
-      act(() => vi.advanceTimersByTime(60_000))
+      gateway.setDailyPuzzle('abeja', '2026-01-02')
+      await act(async () => {
+        vi.advanceTimersByTime(60_000)
+        await Promise.resolve()
+        await Promise.resolve()
+      })
 
       expect(screen.getByLabelText('0 de 10 intentos usados')).toBeInTheDocument()
       expect(screen.getByLabelText('Límite inferior: AAAAA')).toBeInTheDocument()
@@ -213,11 +288,11 @@ describe('App', () => {
     }
   })
 
-  it('permite practicar sin alterar la partida diaria', () => {
+  it('permite practicar sin alterar la partida diaria', async () => {
     vi.useFakeTimers()
 
     try {
-      render(<App now={prototypeDate} trainingRng={() => 0} />)
+      await renderPrototype()
       submit('radio')
       fireEvent.change(screen.getByLabelText('Palabra de cinco letras'), {
         target: { value: 'ma' },
@@ -253,11 +328,11 @@ describe('App', () => {
     }
   })
 
-  it('muestra una sola vez el personaje de papas tras un intento a menos del uno por ciento', () => {
+  it('muestra una sola vez el personaje de papas tras un intento a menos del uno por ciento', async () => {
     vi.useFakeTimers()
 
     try {
-      renderPrototype()
+      await renderPrototype()
 
       const answer = GAME_DICTIONARY.entriesByInputKey.mango
       if (!answer) throw new Error('Falta la respuesta necesaria para la prueba.')
@@ -281,11 +356,11 @@ describe('App', () => {
     }
   })
 
-  it('muestra el personaje de papas al aceptar PAPAS', () => {
+  it('muestra el personaje de papas al aceptar PAPAS', async () => {
     vi.useFakeTimers()
 
     try {
-      renderPrototype()
+      await renderPrototype()
 
       submit('papas')
 
@@ -299,8 +374,8 @@ describe('App', () => {
     }
   })
 
-  it('muestra la respuesta al terminar sin intentos', () => {
-    renderPrototype()
+  it('muestra la respuesta al terminar sin intentos', async () => {
+    await renderPrototype()
 
     const answer = GAME_DICTIONARY.entriesByInputKey.mango
     if (!answer) throw new Error('Falta la respuesta necesaria para la prueba.')
@@ -315,8 +390,8 @@ describe('App', () => {
     expect(screen.getByText('10 intentos')).toBeInTheDocument()
   })
 
-  it('marca las letras que salen del intervalo, pero permite usarlas', () => {
-    renderPrototype()
+  it('marca las letras que salen del intervalo, pero permite usarlas', async () => {
+    await renderPrototype()
     submit('radio')
 
     expect(screen.getByRole('button', { name: 'Letra A' })).toBeEnabled()
@@ -338,11 +413,11 @@ describe('App', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Palabra fuera de rango')
   })
 
-  it('permite cambiar y conservar la paleta y el modo', () => {
+  it('permite cambiar y conservar la paleta y el modo', async () => {
     const themeColor = document.createElement('meta')
     themeColor.name = 'theme-color'
     document.head.append(themeColor)
-    renderPrototype()
+    await renderPrototype()
 
     fireEvent.click(screen.getByRole('button', { name: 'Cambiar tema' }))
     expect(screen.getByRole('dialog', { name: 'Tema' })).toBeInTheDocument()
@@ -357,8 +432,8 @@ describe('App', () => {
     themeColor.remove()
   })
 
-  it('abre la ayuda y muestra estadísticas históricas', () => {
-    renderPrototype()
+  it('abre la ayuda y muestra estadísticas históricas', async () => {
+    await renderPrototype()
 
     fireEvent.click(screen.getByRole('button', { name: 'Cómo jugar' }))
     expect(screen.getByRole('dialog', { name: 'Cómo jugar' })).toBeInTheDocument()

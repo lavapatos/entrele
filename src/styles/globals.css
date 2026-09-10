@@ -192,7 +192,9 @@ summary {
 .tool-button:focus-visible,
 .dialog-close:focus-visible,
 .dialog-action:focus-visible,
+.dialog-secondary-action:focus-visible,
 .practice-exit:focus-visible,
+.access-form input:focus-visible,
 .key:focus-visible,
 .native-guess-input:focus-visible + .guess-row {
   outline: 2px solid var(--color-accent);
@@ -280,24 +282,28 @@ summary {
 
 .practice-exit {
   min-height: 2.75rem;
-  padding: 0 0.15rem;
-  border: 0;
-  background: transparent;
-  color: var(--color-quiet);
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--color-key-border);
+  border-radius: 2px;
+  background: var(--color-key);
+  color: var(--color-ink);
   cursor: pointer;
   font-size: 0.72rem;
   font-weight: 700;
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.2em;
+  white-space: nowrap;
 }
 
 .practice-exit:hover {
-  color: var(--color-ink);
+  border-color: var(--color-ink);
+  background: var(--color-input);
 }
 
 .practice-mode + .attempts {
   margin-top: 0.65rem;
+}
+
+.practice-mode[data-has-exit='false'] {
+  justify-content: center;
 }
 
 .attempts {
@@ -362,6 +368,11 @@ summary {
   cursor: pointer;
 }
 
+.tool-button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
 .dialog-actions {
   display: flex;
   justify-content: center;
@@ -393,6 +404,69 @@ summary {
 .dialog-action:disabled {
   cursor: default;
   opacity: 0.55;
+}
+
+.dialog-secondary-action {
+  min-height: 2.75rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--color-key-border);
+  border-radius: 2px;
+  background: var(--color-key);
+  color: var(--color-ink);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.dialog-secondary-action:hover {
+  border-color: var(--color-ink);
+  background: var(--color-input);
+}
+
+.practice-exit:active,
+.dialog-secondary-action:active {
+  transform: translateY(1px);
+}
+
+.access-form {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.access-form label {
+  color: var(--color-ink);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.access-form input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--color-key-border);
+  border-radius: 2px;
+  background: var(--color-page);
+  color: var(--color-ink);
+  font: inherit;
+}
+
+.access-form label + input + label {
+  margin-top: 0.4rem;
+}
+
+.access-error {
+  min-height: 1.1rem;
+  margin: 0.15rem 0 0;
+  color: var(--color-alert);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.1rem;
+  text-align: center;
+}
+
+.game-dialog > .access-error:empty {
+  display: none;
 }
 
 .share-status {

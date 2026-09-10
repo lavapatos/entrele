@@ -7,7 +7,7 @@ import { getBrowserStorage } from './browser-storage'
 import type { StorageAdapter } from './browser-storage'
 import { DAILY_GAME_STORAGE_VERSION, migrateDailyGame, type StoredDailyGame } from './migrations'
 
-export const DAILY_GAME_STORAGE_KEY = 'entrele:daily-game:v1'
+export const DAILY_GAME_STORAGE_KEY = 'entrele:private-daily-game:v1'
 
 export type RestoredDailyGame = Readonly<{
   game: GameState

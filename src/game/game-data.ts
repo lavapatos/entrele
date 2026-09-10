@@ -32,6 +32,27 @@ export type GameSession = Readonly<{
   game: GameState
 }>
 
+export type DailyGameSeed = Readonly<{
+  answer: string
+  dateKey: string
+  dictionaryVersion: string
+}>
+
+export function createDailyGameSession(seed: DailyGameSeed): GameSession {
+  if (seed.dictionaryVersion !== DICTIONARY_VERSION) {
+    throw new Error('La palabra diaria no coincide con la versión del diccionario.')
+  }
+
+  return {
+    dateKey: seed.dateKey,
+    game: createGame({
+      dictionary: GAME_DICTIONARY,
+      answer: seed.answer,
+      maxAttempts: DEFAULT_MAX_ATTEMPTS,
+    }),
+  }
+}
+
 export function createGameSession(now: Date = new Date()): GameSession {
   const daily = selectDailyAnswer(
     {

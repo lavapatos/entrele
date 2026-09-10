@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { createEmptyStats, expireStreak, getWinRate, recordDailyResult } from './stats'
+import {
+  createEmptyStats,
+  createStatsFromDailyResults,
+  expireStreak,
+  getWinRate,
+  recordDailyResult,
+} from './stats'
 
 describe('daily stats', () => {
   it('registra una fecha una sola vez y distribuye solo las victorias', () => {
@@ -55,5 +61,20 @@ describe('daily stats', () => {
 
     expect(expireStreak(stats, '2026-09-02').currentStreak).toBe(1)
     expect(expireStreak(stats, '2026-09-03').currentStreak).toBe(0)
+  })
+
+  it('reconstruye estadísticas aunque el servidor entregue las fechas desordenadas', () => {
+    const stats = createStatsFromDailyResults([
+      { dateKey: '2026-09-03', status: 'lost', attemptsUsed: 10 },
+      { dateKey: '2026-09-02', status: 'won', attemptsUsed: 2 },
+      { dateKey: '2026-09-01', status: 'won', attemptsUsed: 3 },
+    ])
+
+    expect(stats.played).toBe(3)
+    expect(stats.wins).toBe(2)
+    expect(stats.currentStreak).toBe(0)
+    expect(stats.bestStreak).toBe(2)
+    expect(stats.attemptDistribution[1]).toBe(1)
+    expect(stats.attemptDistribution[2]).toBe(1)
   })
 })

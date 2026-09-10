@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import type { FormEvent, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 import { submitGuess } from '../../game/engine'
-import { createGameSession, createTrainingGame } from '../../game/game-data'
+import { createDailyGameSession, createTrainingGame } from '../../game/game-data'
 import {
   getAllowedNextLetters,
   getAttemptsUsed,
@@ -10,7 +10,6 @@ import {
   getRemainingRange,
   isInputPrefixWithinRange,
 } from '../../game/selectors'
-import { expireStreak, recordDailyResult } from '../../game/stats'
 import type { RNG } from '../../game/training'
 import type {
   GameState,
@@ -19,8 +18,9 @@ import type {
   RangeBound,
   SubmitGuessResult,
 } from '../../game/types'
+import type { PrivateGameGateway } from '../../private-access/types'
+import { usePrivateGameAccess } from '../../private-access/use-private-game-access'
 import { loadDailyGame, saveDailyGame } from '../../storage/game-storage'
-import { loadStats, saveStats } from '../../storage/stats-storage'
 import { formatDistancePercentage, getDistanceMarkerPosition } from './distance-display'
 import FriesMascot from './FriesMascot'
 import GameResultDialog from './GameResultDialog'
@@ -28,6 +28,7 @@ import GameTools from './GameTools'
 
 type DailyGameProps = Readonly<{
   now?: Date
+  privateGateway: PrivateGameGateway | null
   trainingRng?: RNG
   themeControl: ReactNode
 }>
@@ -61,44 +62,34 @@ const CORRECT_RESULT_DELAY_MS = 1050
 const CLOSE_GUESS_CAMEO_THRESHOLD_PERCENT = 1
 const FRIES_CAMEO_DURATION_MS = 1200
 const FRIES_EASTER_EGG_WORD = 'papas'
-const DAILY_ROLLOVER_CHECK_MS = 60_000
 
-export default function DailyGame({ now, trainingRng, themeControl }: DailyGameProps) {
-  const [dailyRound, setDailyRound] = useState<DailyRoundState>(() => {
-    const session = createGameSession(now ?? new Date())
-    const restored = loadDailyGame(session)
-
-    return { dateKey: session.dateKey, game: restored.game, input: restored.draft }
-  })
-  const [practiceRound, setPracticeRound] = useState<RoundState | null>(null)
-  const [mode, setMode] = useState<GameMode>('daily')
-  const [stats, setStats] = useState(() => {
-    const loaded = expireStreak(loadStats(), dailyRound.dateKey)
-
-    if (dailyRound.game.status === 'playing') return loaded
-
-    const reconciled = recordDailyResult(loaded, {
-      dateKey: dailyRound.dateKey,
-      status: dailyRound.game.status,
-      attemptsUsed: getAttemptsUsed(dailyRound.game),
-    })
-    if (reconciled !== loaded) saveStats(reconciled)
-    return reconciled
-  })
+export default function DailyGame({
+  now,
+  privateGateway,
+  trainingRng,
+  themeControl,
+}: DailyGameProps) {
+  const privateAccess = usePrivateGameAccess({ gateway: privateGateway, now })
+  const [dailyRound, setDailyRound] = useState<DailyRoundState | null>(null)
+  const [practiceRound, setPracticeRound] = useState<RoundState>(() => ({
+    game: createTrainingGame(null, trainingRng),
+    input: '',
+  }))
+  const [mode, setMode] = useState<GameMode>('practice')
   const [notice, setNotice] = useState('')
-  const [resultOpen, setResultOpen] = useState(dailyRound.game.status !== 'playing')
+  const [resultOpen, setResultOpen] = useState(false)
   const [showFriesCameo, setShowFriesCameo] = useState(false)
   const [rejectionSequence, setRejectionSequence] = useState(0)
   const resultDelayRef = useRef<number | undefined>(undefined)
   const friesCameoDelayRef = useRef<number | undefined>(undefined)
-  const dailyDateKeyRef = useRef(dailyRound.dateKey)
-  const statsRef = useRef(stats)
+  const dailyDateKeyRef = useRef<string | null>(null)
   const hasShownDailyFriesCameoRef = useRef(false)
   const hasShownPracticeFriesCameoRef = useRef(false)
-  const activeRound = mode === 'practice' && practiceRound ? practiceRound : dailyRound
+  const activeMode: GameMode = mode === 'daily' && dailyRound ? 'daily' : 'practice'
+  const activeRound = activeMode === 'daily' && dailyRound ? dailyRound : practiceRound
   const { game, input } = activeRound
   const hasShownFriesCameoRef =
-    mode === 'daily' ? hasShownDailyFriesCameoRef : hasShownPracticeFriesCameoRef
+    activeMode === 'daily' ? hasShownDailyFriesCameoRef : hasShownPracticeFriesCameoRef
   const range = getRemainingRange(game)
   const proximity = getRangeProximity(game)
   const attemptsUsed = getAttemptsUsed(game)
@@ -106,7 +97,15 @@ export default function DailyGame({ now, trainingRng, themeControl }: DailyGameP
   const isPlaying = game.status === 'playing'
   const allowedLetters = getAllowedNextLetters(game, input)
   const isInputOutsideRange = !isInputPrefixWithinRange(game, input)
-  const displayedNotice = isInputOutsideRange ? 'Palabra fuera de rango' : notice
+  const privateDailyNotice =
+    activeMode === 'practice' &&
+    privateAccess.authenticationStatus === 'signed-in' &&
+    privateAccess.dailyStatus === 'unavailable'
+      ? 'No se pudo cargar la diaria.'
+      : ''
+  const displayedNotice = isInputOutsideRange
+    ? 'Palabra fuera de rango'
+    : notice || privateDailyNotice
 
   useEffect(
     () => () => {
@@ -122,73 +121,49 @@ export default function DailyGame({ now, trainingRng, themeControl }: DailyGameP
   )
 
   useEffect(() => {
-    if (now) return
+    const puzzle = privateAccess.puzzle
+    if (!puzzle || puzzle.dateKey === dailyDateKeyRef.current) return
 
-    function checkForNewDay() {
-      const session = createGameSession(new Date())
-      if (session.dateKey === dailyDateKeyRef.current) return
+    const previousDateKey = dailyDateKeyRef.current
+    const session = createDailyGameSession(puzzle)
+    const restored = loadDailyGame(session)
 
-      const restored = loadDailyGame(session)
-      let nextStats = expireStreak(statsRef.current, session.dateKey)
+    dailyDateKeyRef.current = session.dateKey
+    hasShownDailyFriesCameoRef.current = false
+    setDailyRound({
+      dateKey: session.dateKey,
+      game: restored.game,
+      input: restored.draft,
+    })
 
-      if (restored.game.status !== 'playing') {
-        nextStats = recordDailyResult(nextStats, {
-          dateKey: session.dateKey,
-          status: restored.game.status,
-          attemptsUsed: getAttemptsUsed(restored.game),
-        })
-      }
-
-      if (nextStats !== statsRef.current) {
-        statsRef.current = nextStats
-        setStats(nextStats)
-        saveStats(nextStats)
-      }
-
-      dailyDateKeyRef.current = session.dateKey
-      hasShownDailyFriesCameoRef.current = false
-      setDailyRound({
+    if (restored.game.status !== 'playing') {
+      privateAccess.recordCompletedResult({
         dateKey: session.dateKey,
-        game: restored.game,
-        input: restored.draft,
+        status: restored.game.status,
+        attemptsUsed: getAttemptsUsed(restored.game),
       })
-
-      if (mode === 'daily') {
-        if (resultDelayRef.current !== undefined) {
-          window.clearTimeout(resultDelayRef.current)
-          resultDelayRef.current = undefined
-        }
-        if (friesCameoDelayRef.current !== undefined) {
-          window.clearTimeout(friesCameoDelayRef.current)
-          friesCameoDelayRef.current = undefined
-        }
-        setNotice('')
-        setResultOpen(restored.game.status !== 'playing')
-        setShowFriesCameo(false)
-        setRejectionSequence(0)
-      }
     }
 
-    const intervalId = window.setInterval(checkForNewDay, DAILY_ROLLOVER_CHECK_MS)
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') checkForNewDay()
+    if (previousDateKey === null || mode === 'daily') {
+      setMode('daily')
+      resetTransientFeedback(restored.game.status !== 'playing')
     }
+  }, [mode, privateAccess])
 
-    window.addEventListener('focus', checkForNewDay)
-    document.addEventListener('visibilitychange', handleVisibilityChange)
+  useEffect(() => {
+    if (privateAccess.authenticationStatus !== 'signed-out') return
 
-    return () => {
-      window.clearInterval(intervalId)
-      window.removeEventListener('focus', checkForNewDay)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-    }
-  }, [mode, now])
+    dailyDateKeyRef.current = null
+    setDailyRound(null)
+    setMode('practice')
+    resetTransientFeedback(false)
+  }, [privateAccess.authenticationStatus])
 
   function updateInput(value: string) {
     const nextInput = [...value].slice(0, game.dictionary.wordLength).join('')
     setNotice('')
 
-    if (mode === 'daily') {
+    if (activeMode === 'daily' && dailyRound) {
       setDailyRound({ ...dailyRound, input: nextInput })
       saveDailyGame({ dateKey: dailyRound.dateKey, game, draft: nextInput })
       return
@@ -207,9 +182,7 @@ export default function DailyGame({ now, trainingRng, themeControl }: DailyGameP
     updateInput([...input].slice(0, -1).join(''))
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-
+  function handleSubmit() {
     const submission = submitGuess(game, input)
 
     if (!submission.accepted) {
@@ -232,7 +205,7 @@ export default function DailyGame({ now, trainingRng, themeControl }: DailyGameP
 
     setNotice(getAcceptedNotice(submission))
 
-    if (mode === 'daily') {
+    if (activeMode === 'daily' && dailyRound) {
       setDailyRound({
         dateKey: dailyRound.dateKey,
         game: submission.state,
@@ -245,17 +218,11 @@ export default function DailyGame({ now, trainingRng, themeControl }: DailyGameP
       })
 
       if (submission.state.status !== 'playing') {
-        const nextStats = recordDailyResult(statsRef.current, {
+        privateAccess.recordCompletedResult({
           dateKey: dailyRound.dateKey,
           status: submission.state.status,
           attemptsUsed: getAttemptsUsed(submission.state),
         })
-
-        if (nextStats !== statsRef.current) {
-          statsRef.current = nextStats
-          setStats(nextStats)
-          saveStats(nextStats)
-        }
       }
     } else {
       setPracticeRound({ game: submission.state, input: nextInput })
@@ -282,16 +249,12 @@ export default function DailyGame({ now, trainingRng, themeControl }: DailyGameP
   }
 
   function startPractice() {
-    if (!practiceRound) {
-      setPracticeRound({ game: createTrainingGame(null, trainingRng), input: '' })
-    }
-
     setMode('practice')
     resetTransientFeedback(false)
   }
 
   function startNextPracticeRound() {
-    const previousAnswerInputKey = practiceRound?.game.answer.inputKey ?? null
+    const previousAnswerInputKey = practiceRound.game.answer.inputKey
     setPracticeRound({
       game: createTrainingGame(previousAnswerInputKey, trainingRng),
       input: '',
@@ -301,6 +264,11 @@ export default function DailyGame({ now, trainingRng, themeControl }: DailyGameP
   }
 
   function returnToDailyGame() {
+    if (!dailyRound) {
+      void privateAccess.refresh()
+      return
+    }
+
     setMode('daily')
     resetTransientFeedback(dailyRound.game.status !== 'playing')
   }
@@ -322,13 +290,19 @@ export default function DailyGame({ now, trainingRng, themeControl }: DailyGameP
   }
 
   return (
-    <form className="game-form" onSubmit={handleSubmit}>
-      {mode === 'practice' ? (
-        <div className="practice-mode" aria-label="Modo práctica">
+    <div className="game-form">
+      {activeMode === 'practice' ? (
+        <div
+          className="practice-mode"
+          data-has-exit={privateAccess.authenticationStatus === 'signed-in' && Boolean(dailyRound)}
+          aria-label="Modo práctica"
+        >
           <span>Práctica</span>
-          <button className="practice-exit" type="button" onClick={returnToDailyGame}>
-            Volver a diaria
-          </button>
+          {privateAccess.authenticationStatus === 'signed-in' && dailyRound ? (
+            <button className="practice-exit" type="button" onClick={returnToDailyGame}>
+              Volver a diaria
+            </button>
+          ) : null}
         </div>
       ) : null}
       <AttemptDots used={attemptsUsed} total={game.maxAttempts} />
@@ -357,6 +331,7 @@ export default function DailyGame({ now, trainingRng, themeControl }: DailyGameP
             correct={game.status === 'won'}
             rejectionSequence={rejectionSequence}
             onChange={updateInput}
+            onSubmit={handleSubmit}
           />
 
           <BoundRow
@@ -369,10 +344,13 @@ export default function DailyGame({ now, trainingRng, themeControl }: DailyGameP
         </div>
 
         <GameTools
-          mode={mode}
-          stats={stats}
+          mode={activeMode}
+          authenticationStatus={privateAccess.authenticationStatus}
+          stats={privateAccess.stats}
           themeControl={themeControl}
           onStartPractice={startPractice}
+          onSignIn={privateAccess.signIn}
+          onSignOut={privateAccess.signOut}
         />
       </section>
 
@@ -392,6 +370,7 @@ export default function DailyGame({ now, trainingRng, themeControl }: DailyGameP
         allowedLetters={allowedLetters}
         onLetter={appendLetter}
         onDelete={deleteLetter}
+        onSubmit={handleSubmit}
       />
 
       {game.status === 'playing' ? null : (
@@ -401,9 +380,9 @@ export default function DailyGame({ now, trainingRng, themeControl }: DailyGameP
           answer={game.answer.display}
           attemptsUsed={attemptsUsed}
           onClose={() => setResultOpen(false)}
-          onNextRound={mode === 'practice' ? startNextPracticeRound : undefined}
+          onNextRound={activeMode === 'practice' ? startNextPracticeRound : undefined}
           shareResult={
-            mode === 'daily'
+            activeMode === 'daily' && dailyRound
               ? {
                   dateKey: dailyRound.dateKey,
                   status: game.status,
@@ -414,7 +393,7 @@ export default function DailyGame({ now, trainingRng, themeControl }: DailyGameP
           }
         />
       )}
-    </form>
+    </div>
   )
 }
 
@@ -467,6 +446,7 @@ function GuessRow({
   correct,
   rejectionSequence,
   onChange,
+  onSubmit,
 }: Readonly<{
   value: string
   wordLength: number
@@ -475,6 +455,7 @@ function GuessRow({
   correct: boolean
   rejectionSequence: number
   onChange: (value: string) => void
+  onSubmit: () => void
 }>) {
   const letters = [...value.toLocaleUpperCase('es-CL')]
 
@@ -498,6 +479,11 @@ function GuessRow({
         aria-describedby="game-notice"
         className="native-guess-input"
         onChange={(event) => onChange(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter') return
+          event.preventDefault()
+          onSubmit()
+        }}
       />
       <div
         key={rejectionSequence}
@@ -556,11 +542,13 @@ function OnScreenKeyboard({
   allowedLetters,
   onLetter,
   onDelete,
+  onSubmit,
 }: Readonly<{
   disabled: boolean
   allowedLetters: readonly string[]
   onLetter: (letter: string) => void
   onDelete: () => void
+  onSubmit: () => void
 }>) {
   const allowedLetterSet = new Set(allowedLetters)
 
@@ -601,9 +589,10 @@ function OnScreenKeyboard({
           {rowIndex === KEYBOARD_ROWS.length - 1 ? (
             <button
               className="key key-action"
-              type="submit"
+              type="button"
               aria-label="Probar"
               disabled={disabled}
+              onClick={onSubmit}
             >
               ↵
             </button>

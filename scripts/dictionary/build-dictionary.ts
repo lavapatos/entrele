@@ -168,6 +168,13 @@ const dictionaryData = {
     rareSensitiveEvery: RARE_SENSITIVE_EVERY,
   },
 } as const
+const privateDailyData = {
+  version,
+  epochDate: '2026-01-01',
+  timeZone: 'America/Santiago',
+  answers: dictionaryData.answers,
+  schedule: dictionaryData.schedule,
+} as const
 const report = {
   version,
   source: {
@@ -199,8 +206,13 @@ const report = {
 } as const
 
 await mkdir(new URL('.', PATHS.generatedDictionary), { recursive: true })
+await mkdir(new URL('.', PATHS.generatedPrivateDailyData), { recursive: true })
 await mkdir(new URL('.', PATHS.generatedReport), { recursive: true })
 await writeFile(PATHS.generatedDictionary, `${JSON.stringify(dictionaryData)}\n`)
+await writeFile(
+  PATHS.generatedPrivateDailyData,
+  `export const PRIVATE_DAILY_DATA = ${JSON.stringify(privateDailyData, null, 2)} as const\n`,
+)
 await writeFile(PATHS.generatedReport, `${JSON.stringify(report, null, 2)}\n`)
 
 console.log(

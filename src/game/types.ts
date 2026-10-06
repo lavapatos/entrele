@@ -72,8 +72,8 @@ export type RemainingRange = Readonly<{
 }>
 
 export type RangeProximity = Readonly<{
-  lastGuessDistancePercent: number | null
-  closerBound: 'lower' | 'upper' | 'tie' | null
+  nearestBoundDistancePercent: number | null
+  answerPositionPercent: number | null
 }>
 
 export type GameResult = Readonly<{

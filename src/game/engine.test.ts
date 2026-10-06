@@ -66,8 +66,8 @@ describe('motor de ENTRELE', () => {
     expect(getRemainingRange(after.state).upper.display).toBe('radio')
     expect(getRemainingRange(after.state).candidateCount).toBe(46)
     expect(getRangeProximity(after.state)).toEqual({
-      lastGuessDistancePercent: 25,
-      closerBound: 'upper',
+      nearestBoundDistancePercent: 25,
+      answerPositionPercent: (34 / 47) * 100,
     })
 
     const before = expectAccepted(submitGuess(after.state, 'cable'))
@@ -79,8 +79,8 @@ describe('motor de ENTRELE', () => {
       candidateCount: 28,
     })
     expect(getRangeProximity(before.state)).toEqual({
-      lastGuessDistancePercent: (16 / 52) * 100,
-      closerBound: 'upper',
+      nearestBoundDistancePercent: 25,
+      answerPositionPercent: (16 / 29) * 100,
     })
     expect(initial.guesses).toHaveLength(0)
   })
@@ -92,8 +92,8 @@ describe('motor de ENTRELE', () => {
     expect(win.state.status).toBe('won')
     expect(getRemainingRange(win.state).candidateCount).toBe(0)
     expect(getRangeProximity(win.state)).toEqual({
-      lastGuessDistancePercent: 0,
-      closerBound: null,
+      nearestBoundDistancePercent: 0,
+      answerPositionPercent: 50,
     })
     expect(getGameResult(win.state)).toEqual({
       status: 'won',

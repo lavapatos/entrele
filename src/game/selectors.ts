@@ -60,24 +60,23 @@ export function getRangeProximity(state: GameState): RangeProximity {
   const lastGuess = getLastGuess(state)
 
   if (!lastGuess) {
-    return { lastGuessDistancePercent: null, closerBound: null }
+    return { nearestBoundDistancePercent: null, answerPositionPercent: null }
   }
 
-  const lastGuessDistancePercent = getDistancePercent(
-    lastGuess.rankDistance,
-    state.dictionary.entries.length,
-  )
-
   if (lastGuess.relation === 'equal') {
-    return { lastGuessDistancePercent, closerBound: null }
+    return { nearestBoundDistancePercent: 0, answerPositionPercent: 50 }
   }
 
   const lowerDistance = state.answer.sortRank - state.lowerBoundRank
   const upperDistance = state.upperBoundRank - state.answer.sortRank
-  const closerBound =
-    lowerDistance === upperDistance ? 'tie' : lowerDistance < upperDistance ? 'lower' : 'upper'
+  const remainingSpan = lowerDistance + upperDistance
+  const nearestBoundDistancePercent = getDistancePercent(
+    Math.min(lowerDistance, upperDistance),
+    state.dictionary.entries.length,
+  )
+  const answerPositionPercent = (lowerDistance / remainingSpan) * 100
 
-  return { lastGuessDistancePercent, closerBound }
+  return { nearestBoundDistancePercent, answerPositionPercent }
 }
 
 export function getGameResult(state: GameState): GameResult {

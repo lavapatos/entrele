@@ -151,6 +151,36 @@ describe('App', () => {
     }
   })
 
+  it('reubica el indicador al estrechar el intervalo sin perder la mejor cercanía', async () => {
+    await renderPrototype()
+
+    const answer = GAME_DICTIONARY.entriesByInputKey.mango
+    const kilos = GAME_DICTIONARY.entriesByInputKey.kilos
+    const oleas = GAME_DICTIONARY.entriesByInputKey.oleas
+
+    if (!answer || !kilos || !oleas) {
+      throw new Error('Faltan MANGO, KILOS u OLEAS para probar el indicador.')
+    }
+
+    const kilosDistance = answer.sortRank - kilos.sortRank
+    const oleasDistance = oleas.sortRank - answer.sortRank
+    expect(kilosDistance).toBeLessThan(oleasDistance)
+
+    submit('kilos')
+
+    const distanceLabel = formatDistancePercentage(
+      getDistancePercent(kilosDistance, GAME_DICTIONARY.entries.length),
+    )
+    const firstTop = Number.parseFloat(screen.getByText(distanceLabel).style.top)
+    expect(firstTop).toBeLessThan(50)
+
+    submit('oleas')
+
+    const narrowedTop = Number.parseFloat(screen.getByText(distanceLabel).style.top)
+    expect(narrowedTop).toBeGreaterThan(firstTop)
+    expect(narrowedTop).toBeLessThan(50)
+  })
+
   it('copia el resultado diario sin revelar la palabra', async () => {
     vi.useFakeTimers()
     const writeText = vi.fn().mockResolvedValue(undefined)

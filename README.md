@@ -39,8 +39,8 @@ necesidad de una cuenta.
 Hay una palabra escondida de cinco letras y diez intentos válidos para
 encontrarla. Cada intento cierra el intervalo por orden alfabético, si la
 respuesta está después, la palabra pasa a ser el límite inferior, si está antes,
-pasa a ser el límite superior. El indicador se mueve para mostrar qué tan cerca
-estuvo el intento.
+pasa a ser el límite superior. El indicador muestra la distancia al límite más
+cercano y ubica la respuesta dentro del intervalo restante.
 
 Las palabras inválidas, repetidas o fuera del intervalo no gastan intentos.
 

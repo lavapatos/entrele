@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 
+import { getDistancePercent } from '../../game/compare'
 import { submitGuess } from '../../game/engine'
 import { createDailyGameSession, createTrainingGame } from '../../game/game-data'
 import {
@@ -14,7 +15,6 @@ import type { RNG } from '../../game/training'
 import type {
   GameState,
   GuessRejectionReason,
-  GuessRelation,
   RangeBound,
   SubmitGuessResult,
 } from '../../game/types'
@@ -192,7 +192,10 @@ export default function DailyGame({
     }
 
     const didWin = submission.state.status === 'won'
-    const acceptedDistance = getRangeProximity(submission.state).lastGuessDistancePercent
+    const acceptedDistance = getDistancePercent(
+      submission.guess.rankDistance,
+      submission.state.dictionary.entries.length,
+    )
     const isFriesEasterEgg = submission.guess.inputKey === FRIES_EASTER_EGG_WORD
     const isCloseGuessCameo =
       submission.state.status === 'playing' &&
@@ -309,8 +312,8 @@ export default function DailyGame({
 
       <section className="playfield" aria-label="Intervalo actual">
         <DistanceGauge
-          percentage={proximity.lastGuessDistancePercent}
-          relation={lastGuess?.relation ?? null}
+          percentage={proximity.nearestBoundDistancePercent}
+          positionPercentage={proximity.answerPositionPercent}
           showFriesCameo={showFriesCameo}
         />
 
@@ -506,19 +509,19 @@ function GuessRow({
 
 function DistanceGauge({
   percentage,
-  relation,
+  positionPercentage,
   showFriesCameo,
 }: Readonly<{
   percentage: number | null
-  relation: GuessRelation | null
+  positionPercentage: number | null
   showFriesCameo: boolean
 }>) {
   const marker =
-    percentage === null || relation === null
+    percentage === null || positionPercentage === null
       ? null
       : {
           label: formatDistancePercentage(percentage),
-          position: getDistanceMarkerPosition(percentage, relation),
+          position: getDistanceMarkerPosition(positionPercentage),
         }
 
   return (
@@ -619,5 +622,5 @@ function getAcceptedNotice(submission: Extract<SubmitGuessResult, { accepted: tr
 function getDistanceLabel(percentage: number | null): string {
   return percentage === null
     ? 'La distancia aparecerá después del primer intento válido.'
-    : `Distancia: ${formatDistancePercentage(percentage)}`
+    : `Distancia al límite más cercano: ${formatDistancePercentage(percentage)}`
 }

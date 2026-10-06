@@ -13,23 +13,16 @@ describe('presentación de distancia', () => {
     expect(formatDistancePercentage(18.7)).toBe('19%')
   })
 
-  it('amplía visualmente las distancias pequeñas sin alterar el porcentaje', () => {
-    expect(getDistanceMarkerPosition(0, 'after')).toBe(86)
-    expect(getDistanceMarkerPosition(0.01, 'after')).toBeLessThan(75)
-    expect(getDistanceMarkerPosition(0.01, 'after')).toBeGreaterThan(14)
-    expect(getDistanceMarkerPosition(1, 'after')).toBeLessThan(
-      getDistanceMarkerPosition(0.01, 'after'),
-    )
-    expect(getDistanceMarkerPosition(100, 'after')).toBe(14)
-    expect(getDistanceMarkerPosition(0, 'equal')).toBe(50)
+  it('sitúa la respuesta proporcionalmente dentro del intervalo visible', () => {
+    expect(getDistanceMarkerPosition(0)).toBe(14)
+    expect(getDistanceMarkerPosition(25)).toBe(32)
+    expect(getDistanceMarkerPosition(50)).toBe(50)
+    expect(getDistanceMarkerPosition(75)).toBe(68)
+    expect(getDistanceMarkerPosition(100)).toBe(86)
   })
 
-  it('acerca el indicador al límite que actualizó la palabra probada', () => {
-    const nearLowerBound = getDistanceMarkerPosition(0.01, 'before')
-    const nearUpperBound = getDistanceMarkerPosition(0.01, 'after')
-
-    expect(nearLowerBound).toBeLessThan(50)
-    expect(nearUpperBound).toBeGreaterThan(50)
-    expect(nearLowerBound + nearUpperBound).toBeCloseTo(100)
+  it('limita posiciones externas a los extremos de la guía', () => {
+    expect(getDistanceMarkerPosition(-20)).toBe(14)
+    expect(getDistanceMarkerPosition(120)).toBe(86)
   })
 })

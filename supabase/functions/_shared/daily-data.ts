@@ -1,6 +1,7 @@
 export const PRIVATE_DAILY_DATA = {
   "version": "rla-es-cl-2.8.1+eb055eef4c24",
   "epochDate": "2026-01-01",
+  "shuffleStartDate": "2026-10-07",
   "timeZone": "America/Santiago",
   "answers": {
     "general": [

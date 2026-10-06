@@ -36,6 +36,7 @@ type SpellWithData = Readonly<{
 const SENSITIVE_INTERVAL_DAYS = 64
 const RARE_SENSITIVE_EVERY = 4
 const SENSITIVE_PHASE = 37
+const SHUFFLE_START_DATE = '2026-10-07'
 
 const additions = await readCuratedLines(PATHS.additions)
 const exclusions = new Set((await readCuratedLines(PATHS.exclusions)).map(requireInputKey))
@@ -171,6 +172,7 @@ const dictionaryData = {
 const privateDailyData = {
   version,
   epochDate: '2026-01-01',
+  shuffleStartDate: SHUFFLE_START_DATE,
   timeZone: 'America/Santiago',
   answers: dictionaryData.answers,
   schedule: dictionaryData.schedule,
